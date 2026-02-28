@@ -112,9 +112,9 @@ function startRaceTick(room) {
 
     broadcastPositions(room);
 
-    // End only when time expires — race always runs the full duration
-    const timeExpired = now - room.raceStart >= RACE_DURATION_MS;
-    if (timeExpired) {
+    const timeExpired  = now - room.raceStart >= RACE_DURATION_MS;
+    const allFinished  = [...room.players.values()].every(p => p.finished);
+    if (timeExpired || allFinished) {
       endRace(room);
     }
   }, TICK_INTERVAL_MS);
