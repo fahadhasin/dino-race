@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Race — Speed = Your Ping</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a2e;
+    color: #eee;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Screens ── */
+  .screen { display: none; width: 100%; max-width: 900px; padding: 20px; }
+  .screen.active { display: block; }
+
+  /* ── Join screen ── */
+  #join-screen {
+    max-width: 640px;
+    text-align: center;
+  }
+  #join-screen h1 { font-size: 2.2rem; margin-bottom: 6px; }
+  #join-screen .subtitle {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 28px;
+  }
+  .name-row { max-width: 340px; margin: 0 auto 24px; text-align: left; }
+  .form-group { margin-bottom: 14px; text-align: left; }
+  .form-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 5px; }
+  .form-group input {
+    width: 100%;
+    background: #16213e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #eee;
+    font-size: 1rem;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: #e94560; }
+  /* Two-card layout */
+  .join-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 0 auto;
+  }
+  .join-card {
+    background: #16213e;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 28px 20px 22px;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .join-card:hover { border-color: #555; }
+  .join-card.highlighted { border-color: #e94560; background: rgba(233,69,96,0.06); }
+  .join-card-icon { font-size: 2rem; margin-bottom: 10px; }
+  .join-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+  .join-card p { color: #888; font-size: 0.82rem; margin-bottom: 18px; line-height: 1.5; flex: 1; }
+  .join-card .code-input {
+    text-align: center;
+    font-size: 1.2rem;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ── Invited mode: join card is dominant, create card is secondary ── */
+  #join-screen.invited-mode .join-cards {
+    grid-template-columns: 1fr;
+    max-width: 380px;
+  }
+  #join-screen.invited-mode #join-card {
+    order: 1;
+  }
+  #join-screen.invited-mode #create-card {
+    order: 2;
+    padding: 12px 16px;
+    background: rgba(22, 33, 62, 0.45);
+    border: 1px dashed #333;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+  }
+  #join-screen.invited-mode #create-card .join-card-icon {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+  #join-screen.invited-mode #create-card h3 {
+    font-size: 0.85rem;
+    color: #777;
+    margin-bottom: 2px;
+  }
+  #join-screen.invited-mode #create-card p {
+    font-size: 0.74rem;
+    color: #555;
+    margin-bottom: 0;
+    line-height: 1.3;
+  }
+  #join-screen.invited-mode #create-card .btn {
+    white-space: nowrap;
+    width: auto;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    margin-top: 0;
+    flex-shrink: 0;
+    background: #2a2a4a;
+  }
+  .btn {
+    background: #e94560;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: opacity 0.2s, transform 0.1s;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: #16213e;
+    border: 1px solid #333;
+    margin-top: 10px;
+  }
+  .error-msg {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    min-height: 20px;
+  }
+
+  /* ── Lobby screen ── */
+  #lobby-screen h2 { font-size: 1.6rem; margin-bottom: 4px; }
+  .room-code-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .room-code {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #e94560;
+    background: #16213e;
+    border-radius: 6px;
+    padding: 6px 16px;
+  }
+  .copy-btn {
+    background: #16213e;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 6px 14px;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover { background: #0f3460; }
+  .player-list { margin-bottom: 20px; }
+  .player-list h3 { font-size: 0.9rem; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .player-card {
+    align-items: center;
+    background: #16213e;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding: 10px 14px;
+  }
+  .horse-dot {
+    border-radius: 4px;
+    flex-shrink: 0;
+    height: 24px;
+    width: 24px;
+  }
+  .player-card .pname { font-weight: 600; }
+  .player-card .hname { color: #aaa; font-size: 0.85rem; }
+  .lobby-hint { color: #666; font-size: 0.85rem; margin-top: 10px; }
+  #start-btn { max-width: 240px; }
+  .crown { font-size: 0.9em; margin-left: 4px; }
+  .make-organizer-btn {
+    background: none;
+    border: 1px solid #444;
+    border-radius: 5px;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.72rem;
+    margin-left: auto;
+    padding: 3px 8px;
+    transition: border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+  }
+  .make-organizer-btn:hover { border-color: #f1c40f; color: #f1c40f; }
+
+  /* ── Race screen ── */
+  #race-screen { max-width: 100%; padding: 0; position: relative; }
+  #race-canvas { display: block; width: 100%; background: #0d0d1a; }
+
+  #stats-overlay {
+    background: rgba(10,10,26,0.92);
+    border: 1px solid rgba(233,69,96,0.35);
+    border-radius: 8px;
+    font-size: 0.74rem;
+    padding: 10px 14px;
+    position: fixed;
+    right: 16px;
+    top: 16px;
+    min-width: 300px;
+    z-index: 1000;
+    display: none;
+  }
+  #stats-overlay.visible { display: block; }
+  #stats-overlay h4 { color: #e94560; font-size: 0.72rem; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-header, .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 54px 54px 72px;
+    gap: 4px;
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-header { color: #555; font-size: 0.66rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 5px; margin-bottom: 4px; }
+  .stat-row { margin-bottom: 3px; }
+  .stat-row:last-child { margin-bottom: 0; }
+  .stat-row .sname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stat-row .sval  { color: #f1c40f; text-align: right; }
+  .stat-mbps { color: #2ecc71 !important; }
+
+  #countdown-overlay {
+    align-items: center;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+  #countdown-overlay.visible { display: flex; }
+  #countdown-number {
+    color: #e94560;
+    font-size: 8rem;
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 0 40px #e94560aa;
+  }
+  #countdown-label { color: #aaa; font-size: 1.2rem; margin-top: 10px; }
+
+  /* ── Results screen ── */
+  #results-screen { text-align: center; }
+  #results-screen h2 { font-size: 2rem; margin-bottom: 6px; }
+  #results-screen .subtitle { color: #aaa; font-size: 0.9rem; margin-bottom: 24px; }
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  .results-table th {
+    color: #aaa;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #333;
+  }
+  .results-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #222;
+  }
+  .results-table tr:first-child td { background: rgba(233,69,96,0.12); }
+  .place-badge {
+    background: #333;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .place-1 { background: #f1c40f; color: #000; }
+  .place-2 { background: #bdc3c7; color: #000; }
+  .place-3 { background: #cd6133; color: #fff; }
+  .color-swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .good-stat { color: #2ecc71; }
+  .bad-stat { color: #e74c3c; }
+
+  /* ── Challenge zone ── */
+  .challenge-zone {
+    background: linear-gradient(135deg, rgba(233,69,96,0.07), transparent);
+    border: 1px solid rgba(233,69,96,0.22);
+    border-radius: 14px;
+    margin: 0 auto 28px;
+    padding: 22px 22px 18px;
+    text-align: center;
+  }
+  .challenge-headline {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #e94560;
+    margin-bottom: 4px;
+  }
+  .challenge-sub {
+    color: #888;
+    font-size: 0.84rem;
+    margin-bottom: 16px;
+  }
+  #result-card-canvas {
+    border-radius: 10px;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.6);
+    display: block;
+    margin: 0 auto 16px;
+    max-width: 100%;
+  }
+  .share-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .share-btn { margin: 0; padding: 10px 18px; font-size: 0.88rem; width: auto; }
+
+  /* ── Collapsible full stats ── */
+  .stats-details {
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    margin: 0 auto 20px;
+    overflow: hidden;
+  }
+  .stats-details > summary {
+    background: rgba(255,255,255,0.02);
+    color: #888;
+    cursor: pointer;
+    font-size: 0.86rem;
+    list-style: none;
+    padding: 10px 16px;
+    user-select: none;
+  }
+  .stats-details > summary::-webkit-details-marker { display: none; }
+  .stats-details > summary::before { content: '▶  '; font-size: 0.65rem; color: #666; }
+  .stats-details[open] > summary::before { content: '▼  '; }
+  .stats-details > summary:hover { color: #ccc; }
+  .stats-details .results-table { margin-bottom: 0; }
+
+  .results-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 16px auto 8px;
+    max-width: 700px;
+  }
+  .action-btn { width: auto; margin: 0; padding: 10px 18px; font-size: 0.9rem; }
+  #play-again-btn { background: #e94560; }
+  .results-hint { color: #666; font-size: 0.82rem; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- JOIN SCREEN -->
+<div id="join-screen" class="screen active">
+  <h1>🦕 Dino Race</h1>
+  <p class="subtitle">Your internet connection speed <em>is</em> your dino's speed.</p>
+
+  <div class="name-row">
+    <div class="form-group">
+      <label for="player-name-input">Your name</label>
+      <input id="player-name-input" type="text" placeholder="e.g. Speedy Gonzalez" maxlength="20" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="join-cards">
+    <!-- Create card -->
+    <div class="join-card" id="create-card">
+      <div class="join-card-icon">🎮</div>
+      <h3>Create a Race</h3>
+      <p>Start a new room and invite friends with a shareable link.</p>
+      <button class="btn" id="create-btn">Create Race</button>
+    </div>
+
+    <!-- Join card -->
+    <div class="join-card" id="join-card">
+      <div class="join-card-icon">🔗</div>
+      <h3>Join a Race</h3>
+      <p>Enter a room code shared by a friend.</p>
+      <div class="form-group">
+        <input id="room-id-input" class="code-input" type="text" placeholder="AB3Z9K" maxlength="6" autocomplete="off">
+      </div>
+      <button class="btn" id="join-btn">Join Race</button>
+    </div>
+  </div>
+
+  <div class="error-msg" id="join-error" style="margin-top:16px"></div>
+</div>
+
+<!-- LOBBY SCREEN -->
+<div id="lobby-screen" class="screen">
+  <h2>Lobby</h2>
+  <div class="room-code-row">
+    <span>Room:</span>
+    <span class="room-code" id="room-code-display"></span>
+    <button class="copy-btn" id="copy-link-btn">📋 Copy link</button>
+  </div>
+  <div class="player-list">
+    <h3>Players (<span id="player-count">0</span>/6)</h3>
+    <div id="player-cards"></div>
+  </div>
+  <p class="lobby-hint" id="lobby-hint">Waiting for players…</p>
+  <button class="btn" id="start-btn" disabled>Start Race</button>
+</div>
+
+<!-- Live stats: fixed top-right, visible during race -->
+<div id="stats-overlay">
+  <h4>Live Stats</h4>
+  <div id="stats-rows"></div>
+</div>
+
+<!-- RACE SCREEN -->
+<div id="race-screen" class="screen">
+  <canvas id="race-canvas"></canvas>
+  <div id="countdown-overlay">
+    <div id="countdown-number">5</div>
+    <div id="countdown-label">Get ready…</div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="results-screen" class="screen">
+  <h2>🏁 Race Over!</h2>
+  <p class="subtitle">Your connection quality decided the winner.</p>
+
+  <!-- Challenge your friends zone -->
+  <div class="challenge-zone">
+    <div class="challenge-headline">🔥 Challenge Your Friends!</div>
+    <p class="challenge-sub">Share your result card and dare them to beat your ping</p>
+    <canvas id="result-card-canvas" width="560" height="300"></canvas>
+    <div class="share-row">
+      <button class="btn share-btn" id="share-x-btn">𝕏 Post to X</button>
+      <button class="btn share-btn" id="share-wa-btn">💬 WhatsApp</button>
+      <button class="btn share-btn btn-secondary" id="save-card-btn">⬇ Save Card</button>
+      <button class="btn share-btn btn-secondary" id="copy-challenge-btn">🔗 Copy Link</button>
+    </div>
+  </div>
+
+  <!-- Full detailed stats -->
+  <details class="stats-details" open>
+    <summary>📊 Full Results</summary>
+    <table class="results-table" id="results-table">
+      <thead>
+        <tr>
+          <th>Place</th>
+          <th>Dino / Player</th>
+          <th>Avg RTT</th>
+          <th>Avg Jitter</th>
+          <th>Best RTT</th>
+          <th>Worst RTT</th>
+          <th>Avg Speed</th>
+        </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+  </details>
+
+  <div class="results-actions">
+    <button class="btn btn-secondary action-btn" id="download-csv-btn">⬇ Download CSV</button>
+    <button class="btn action-btn" id="play-again-btn">↩ Back to Lobby</button>
+  </div>
+  <p class="results-hint" id="results-hint"></p>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+const socket = io();
+
+
+let myId = null;
+let myRoomId = null;
+let myHorseName = null;
+let organizerId  = null;
+let lastResults  = [];   // stored for download/share
+let myColor = null;
+let myName = '';
+
+// Race state (client-side)
+let raceStartTimestamp = null;
+let raceStartTime = null;        // actual moment race began (for in-race timer)
+const RACE_DURATION_S = 60;      // must match server RACE_DURATION_MS / 1000
+let raceActive = false;
+
+// Server-authoritative positions (socketId -> {position, velocity})
+let serverPositions = {};
+// Smooth render positions (interpolated)
+let renderPositions = {};
+
+// Players map: socketId -> {name, horseName, color}
+let players = {};
+
+// Ping / RTT tracking
+const RTT_WINDOW = 10;
+let rttHistory = [];   // last N round-trip times
+let avgRtt = 100;
+let jitter = 0;
+let estimatedMbps = null;   // null until first measurement
+let pingSeq = 0;
+
+// Race stats tracking
+let raceRtts  = [];
+let raceMbps  = [];   // Mbps samples collected during race
+let lastStutterTime = 0;
+
+// Canvas
+let canvas, ctx;
+let animFrame = null;
+
+// Animation
+let stridePhases = {};   // socketId -> radians, advances per frame
+let laneObjs = {};       // socketId -> [{relX, type, size}] ground decorations
+let lastFrameTime = 0;
+
+// ─────────────────────────────────────────────
+// Screen management
+// ─────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // Show stats overlay only during race
+  const overlay = document.getElementById('stats-overlay');
+  if (overlay) overlay.classList.toggle('visible', id === 'race-screen');
+}
+
+// ─────────────────────────────────────────────
+// Join
+// ─────────────────────────────────────────────
+document.getElementById('create-btn').addEventListener('click', createRoom);
+document.getElementById('join-btn').addEventListener('click', joinExistingRoom);
+document.getElementById('room-id-input').addEventListener('keydown', e => { if (e.key === 'Enter') joinExistingRoom(); });
+document.getElementById('player-name-input').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  // Move focus to room code input so user can type it, or submit if already filled
+  const codeInput = document.getElementById('room-id-input');
+  const code = codeInput.value.trim();
+  if (code) joinExistingRoom(); else codeInput.focus();
+});
+
+// Pre-fill room code from URL — invited mode makes join card dominant
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('room')) {
+  document.getElementById('room-id-input').value = urlParams.get('room').toUpperCase();
+  document.getElementById('join-card').classList.add('highlighted');
+  document.getElementById('join-screen').classList.add('invited-mode');
+}
+
+function getNameOrError() {
+  const name = document.getElementById('player-name-input').value.trim();
+  if (!name) {
+    document.getElementById('join-error').textContent = 'Please enter your name.';
+    return null;
+  }
+  document.getElementById('join-error').textContent = '';
+  return name;
+}
+
+function createRoom() {
+  const name = getNameOrError();
+  if (!name) return;
+  myName = name;
+  document.getElementById('create-btn').disabled = true;
+  socket.emit('join', { playerName: myName, roomId: null });
+}
+
+function joinExistingRoom() {
+  const name = getNameOrError();
+  if (!name) return;
+  const code = document.getElementById('room-id-input').value.trim().toUpperCase();
+  if (!code) {
+    document.getElementById('join-error').textContent = 'Please enter a room code.';
+    return;
+  }
+  myName = name;
+  document.getElementById('join-btn').disabled = true;
+  socket.emit('join', { playerName: myName, roomId: code });
+}
+
+socket.on('join-error', msg => {
+  document.getElementById('join-error').textContent = msg;
+  document.getElementById('join-btn').disabled = false;
+  document.getElementById('create-btn').disabled = false;
+});
+
+socket.on('joined', ({ roomId, playerId, horseName, color }) => {
+  myId = playerId;
+  myRoomId = roomId;
+  myHorseName = horseName;
+  myColor = color;
+
+  document.getElementById('room-code-display').textContent = roomId;
+
+  // Update URL without reload
+  const url = new URL(window.location.href);
+  url.searchParams.set('room', roomId);
+  window.history.replaceState({}, '', url);
+
+  showScreen('lobby-screen');
+  startPingLoop();
+});
+
+// ─────────────────────────────────────────────
+// Copy room link
+// ─────────────────────────────────────────────
+document.getElementById('copy-link-btn').addEventListener('click', () => {
+  const url = new URL(window.location.href);
+  url.searchParams.set('room', myRoomId);
+  navigator.clipboard.writeText(url.toString()).then(() => {
+    const btn = document.getElementById('copy-link-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy link'; }, 2000);
+  });
+});
+
+// ─────────────────────────────────────────────
+// Lobby updates
+// ─────────────────────────────────────────────
+socket.on('lobby-update', ({ players: playerList, state, organizerId: newOrganizerId }) => {
+  // Rebuild local players map
+  players = {};
+  playerList.forEach(p => { players[p.id] = p; });
+  organizerId = newOrganizerId;
+
+  const count = playerList.length;
+  const amOrganizer = myId === organizerId;
+  document.getElementById('player-count').textContent = count;
+
+  const cards = document.getElementById('player-cards');
+  cards.innerHTML = '';
+  playerList.forEach(p => {
+    const isOrganizer = p.id === organizerId;
+    const isMe = p.id === myId;
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    card.innerHTML = `
+      <div class="horse-dot" style="background:${p.color}"></div>
+      <div style="flex:1">
+        <div class="pname">
+          ${escHtml(p.name)}
+          ${isOrganizer ? '<span class="crown" title="Organizer">👑</span>' : ''}
+          ${isMe ? '<span style="color:#e94560;font-size:0.8em"> (you)</span>' : ''}
+        </div>
+        <div class="hname">🦕 ${escHtml(p.horseName)}</div>
+      </div>
+      ${amOrganizer && !isMe ? `<button class="make-organizer-btn" data-id="${p.id}">Make organizer</button>` : ''}`;
+    cards.appendChild(card);
+  });
+
+  // Wire up transfer buttons
+  cards.querySelectorAll('.make-organizer-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      socket.emit('transfer-organizer', { targetId: btn.dataset.id });
+    });
+  });
+
+  const hint = document.getElementById('lobby-hint');
+  const startBtn = document.getElementById('start-btn');
+
+  if (!amOrganizer) {
+    startBtn.style.display = 'none';
+    hint.textContent = count < 2
+      ? 'Waiting for at least 1 more player…'
+      : 'Waiting for the organizer to start the race…';
+  } else {
+    startBtn.style.display = '';
+    if (count < 2) {
+      hint.textContent = 'Waiting for at least 1 more player…';
+      startBtn.disabled = true;
+    } else {
+      hint.textContent = `${count} players ready. You can start!`;
+      startBtn.disabled = false;
+    }
+  }
+
+  // Only auto-navigate to lobby if we're not on the results screen
+  // (results screen handles its own transition via the return-to-lobby flow)
+  const onResults = document.getElementById('results-screen').classList.contains('active');
+  if (!onResults && state === 'lobby') showScreen('lobby-screen');
+});
+
+// ─────────────────────────────────────────────
+// Start race
+// ─────────────────────────────────────────────
+document.getElementById('start-btn').addEventListener('click', () => {
+  socket.emit('start-race');
+});
+
+socket.on('start-error', msg => {
+  alert(msg);
+});
+
+// ─────────────────────────────────────────────
+// Countdown
+// ─────────────────────────────────────────────
+socket.on('countdown-start', ({ raceStartTimestamp: rst }) => {
+  raceStartTimestamp = rst;
+  showScreen('race-screen');
+  initCanvas();
+
+  // Reset render state
+  serverPositions = {};
+  renderPositions = {};
+  stridePhases = {};
+  laneObjs = {};
+  lastFrameTime = 0;
+  Object.keys(players).forEach(id => {
+    serverPositions[id] = { position: 0, velocity: 0 };
+    renderPositions[id] = 0;
+  });
+
+  // Show countdown overlay
+  const overlay = document.getElementById('countdown-overlay');
+  const numEl = document.getElementById('countdown-number');
+  overlay.classList.add('visible');
+
+  function tick() {
+    const remaining = Math.ceil((raceStartTimestamp - Date.now()) / 1000);
+    if (remaining <= 0) {
+      numEl.textContent = 'GO!';
+      setTimeout(() => { overlay.classList.remove('visible'); }, 600);
+      return;
+    }
+    numEl.textContent = remaining;
+    setTimeout(tick, 200);
+  }
+  tick();
+});
+
+socket.on('race-start', ({ raceStart }) => {
+  raceActive = true;
+  raceStartTime = raceStart;
+  raceRtts = [...rttHistory];
+  raceMbps = [];
+  lastStutterTime = 0;
+  if (!animFrame) renderLoop();
+});
+
+// ─────────────────────────────────────────────
+// Position updates from server
+// ─────────────────────────────────────────────
+socket.on('positions', (posData) => {
+  serverPositions = posData;
+});
+
+// ─────────────────────────────────────────────
+// Ping loop
+// ─────────────────────────────────────────────
+function startPingLoop() {
+  setInterval(sendPing, 400);
+  // Speed test: fetch 200 KB every 5 seconds and compute download Mbps
+  measureSpeed();
+  setInterval(measureSpeed, 8000);
+}
+
+async function measureSpeed() {
+  try {
+    const bytes = 1_000_000; // 1 MB — enough for reliable measurement, not excessive
+    const t0  = performance.now();
+    const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}&t=${t0}`, { cache: 'no-store' });
+    const buf = await res.arrayBuffer();
+    const ms  = performance.now() - t0;
+    const mbps = (buf.byteLength * 8) / (ms / 1000) / 1e6;
+    estimatedMbps = Math.min(mbps, 9999);
+    if (raceActive) raceMbps.push(estimatedMbps);
+  } catch (_) { /* ignore */ }
+}
+
+function sendPing() {
+  socket.emit('ping', { clientTs: Date.now(), seq: ++pingSeq });
+}
+
+socket.on('pong', ({ clientTs, serverTs }) => {
+  const rtt = Date.now() - clientTs;
+  rttHistory.push(rtt);
+  if (rttHistory.length > RTT_WINDOW) rttHistory.shift();
+
+  if (raceActive) raceRtts.push(rtt);
+
+  computeStats();
+  sendVelocity();
+  updateStatsUI();
+});
+
+function computeStats() {
+  if (rttHistory.length === 0) return;
+  const mean = rttHistory.reduce((a, b) => a + b, 0) / rttHistory.length;
+  const variance = rttHistory.reduce((s, v) => s + (v - mean) ** 2, 0) / rttHistory.length;
+  avgRtt = mean;
+  jitter = Math.sqrt(variance);
+}
+
+function computeVelocity() {
+  if (avgRtt <= 0) return 0;
+
+  // RTT: 60ms = half-speed baseline (smooth curve, no cliff)
+  const rttScore = 1 / (1 + avgRtt / 60);
+
+  // Jitter / stability: 100ms jitter = half speed
+  const stabilityScore = 1 / (1 + jitter / 100);
+
+  // Mbps: logarithmic boost — 10M→+15%, 100M→+29%, 1G→+43%
+  const mbpsScore = estimatedMbps != null
+    ? 1 + Math.log10(estimatedMbps + 1) / 7
+    : 1.0;
+
+  // No hard cap — your connection quality is your speed
+  return 40 * rttScore * stabilityScore * mbpsScore;
+}
+
+function sendVelocity() {
+  if (!raceActive) return;
+  const vel = computeVelocity();
+  const stats = buildRaceStats();
+  socket.emit('velocity-update', {
+    velocity: vel,
+    raceStats: stats,
+    liveStats: {
+      rtt:    Math.round(avgRtt),
+      jitter: Math.round(jitter),
+      mbps:   estimatedMbps != null ? Math.round(estimatedMbps * 10) / 10 : null,
+    },
+  });
+}
+
+function buildRaceStats() {
+  if (raceRtts.length === 0) return null;
+  const mean = raceRtts.reduce((a, b) => a + b, 0) / raceRtts.length;
+  const variance = raceRtts.reduce((s, v) => s + (v - mean) ** 2, 0) / raceRtts.length;
+  const avgMbps = raceMbps.length
+    ? raceMbps.reduce((a, b) => a + b, 0) / raceMbps.length
+    : null;
+  return {
+    avgRtt:    mean,
+    avgJitter: Math.sqrt(variance),
+    bestRtt:   Math.min(...raceRtts),
+    worstRtt:  Math.max(...raceRtts),
+    avgMbps,
+  };
+}
+
+// ─────────────────────────────────────────────
+// Canvas setup
+// ─────────────────────────────────────────────
+let resizeListenerAdded = false;
+function initCanvas() {
+  canvas = document.getElementById('race-canvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  if (!resizeListenerAdded) {
+    window.addEventListener('resize', resizeCanvas);
+    resizeListenerAdded = true;
+  }
+}
+
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = Math.max(300, Object.keys(players).length * 110 + 80);
+  canvas.style.height = canvas.height + 'px';
+}
+
+// ─────────────────────────────────────────────
+// Render loop
+// ─────────────────────────────────────────────
+const FINISH_POS = 1000;
+
+function renderLoop(ts) {
+  animFrame = requestAnimationFrame(renderLoop);
+  // Clamp dt: prevents objects flying off screen when tab was backgrounded
+  const dt = Math.min(lastFrameTime ? ts - lastFrameTime : 16, 80);
+  lastFrameTime = ts;
+  drawFrame(dt);
+}
+
+function drawFrame(dt) {
+  if (!canvas || !ctx) return;
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Background
+  ctx.fillStyle = '#1a1004';
+  ctx.fillRect(0, 0, W, H);
+
+  const playerIds = Object.keys(players);
+  const numPlayers = playerIds.length;
+  if (numPlayers === 0) return;
+
+  const laneH = Math.floor((H - 60) / numPlayers);
+  const trackLeft = 60;
+  const trackRight = W - 60;
+  const trackWidth = trackRight - trackLeft;
+  const trackH = numPlayers * laneH;
+
+  // Draw lanes with richer background
+  playerIds.forEach((id, i) => {
+    const y = 30 + i * laneH;
+    // Alternating dirt-brown lanes
+    ctx.fillStyle = i % 2 === 0 ? '#2a1f14' : '#251c12';
+    ctx.fillRect(0, y, W, laneH);
+
+    // Green grass strip at top and bottom of each lane
+    ctx.fillStyle = '#1a4a1a';
+    ctx.fillRect(0, y, W, 8);
+    ctx.fillRect(0, y + laneH - 8, W, 8);
+
+    // Lane divider
+    ctx.strokeStyle = '#3a2a1a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, y + laneH);
+    ctx.lineTo(W, y + laneH);
+    ctx.stroke();
+  });
+
+  // Faint distance markers at 25%, 50%, 75%
+  [0.25, 0.5, 0.75].forEach(frac => {
+    const mx = trackLeft + frac * trackWidth;
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath();
+    ctx.moveTo(mx, 30);
+    ctx.lineTo(mx, 30 + trackH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(frac * 100)}%`, mx, 26);
+  });
+
+  // Finish line: bold black-and-white checker pattern
+  const finishX = trackRight;
+  const sqSize = 10;
+  for (let sy = 30; sy < 30 + trackH; sy += sqSize) {
+    const row = Math.floor((sy - 30) / sqSize);
+    for (let col = 0; col < 4; col++) {
+      ctx.fillStyle = (row + col) % 2 === 0 ? '#ffffff' : '#000000';
+      ctx.fillRect(finishX + col * sqSize - 20, sy, sqSize, Math.min(sqSize, 30 + trackH - sy));
+    }
+  }
+
+  // Finish line label
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('FINISH', finishX, 22);
+
+  // Start line
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(trackLeft, 30);
+  ctx.lineTo(trackLeft, 30 + trackH);
+  ctx.stroke();
+
+  // Draw dinos
+  playerIds.forEach((id, i) => {
+    const player = players[id];
+    if (!player) return;
+
+    const serverPos = serverPositions[id]?.position ?? 0;
+    const vel = serverPositions[id]?.velocity ?? 0;
+
+    // Smooth interpolation toward server position
+    const prev = renderPositions[id] ?? serverPos;
+    renderPositions[id] = prev + (serverPos - prev) * 0.3;
+
+    // Jitter stutter: randomly freeze if jitter > 40ms and it's my dino
+    let displayPos = renderPositions[id];
+    if (id === myId && jitter > 40) {
+      const now = Date.now();
+      if (now - lastStutterTime > 900 && Math.random() < 0.15) {
+        lastStutterTime = now;
+        displayPos = prev; // freeze this frame
+      }
+    }
+
+    // Stride runs fast — like real Chrome dino (6–14 Hz range)
+    // Stride Hz scales with sqrt(vel) so fast dinos look quick without going crazy
+    stridePhases[id] = (stridePhases[id] || 0) + (Math.sqrt(vel) * 1.8 + 4) * (dt / 1000) * Math.PI * 2;
+
+    const fraction = Math.min(displayPos / FINISH_POS, 1);
+    const horseX = trackLeft + fraction * trackWidth;
+    const laneCenterY = 30 + i * laneH + laneH / 2;
+
+    const isMe = id === myId;
+    const scale = laneH / 110;
+    const groundY = laneCenterY + Math.round(28 * scale); // feet level
+
+    // ── Scrolling ground objects ──
+    // relX is relative to horseX (dino's screen x).
+    // leftEdge/rightEdge = edges of the visible track in that relative frame.
+    const leftEdge  = trackLeft - horseX;          // e.g. −(dino progress px)
+    const rightEdge = trackLeft + trackWidth - horseX; // remaining track ahead
+
+    if (!laneObjs[id]) {
+      // Pre-fill entire visible track with objects on first frame
+      laneObjs[id] = [];
+      const fillGap = 55;
+      for (let rx = leftEdge - 10; rx < rightEdge + 20; rx += fillGap + Math.random() * 35) {
+        const r = Math.random();
+        laneObjs[id].push({
+          relX: rx,
+          type: r < 0.40 ? 'rock' : r < 0.65 ? 'pebble' : r < 0.85 ? 'puddle' : 'bigrock',
+          size: 0.6 + Math.random() * 0.7,
+        });
+      }
+    }
+
+    // Scroll speed always > 0 so objects move whenever dino is animated.
+    // Tied to stride Hz so visual sync stays consistent at any ping.
+    const strideHz  = vel * 0.5 + 6;
+    const scrollPx  = strideHz * 13 * (dt / 1000);
+    for (const o of laneObjs[id]) o.relX -= scrollPx;
+
+    // Prune objects that scrolled off the left edge of the track
+    laneObjs[id] = laneObjs[id].filter(o => o.relX > leftEdge - 30);
+
+    // Spawn at right edge of visible track (not just 340px — covers whole lane)
+    const furthest = laneObjs[id].reduce((m, o) => (o.relX > m ? o.relX : m), leftEdge);
+    const spawnGap = Math.max(40, 80 - vel * 3);
+    if (furthest < rightEdge - spawnGap) {
+      const r = Math.random();
+      laneObjs[id].push({
+        relX: rightEdge + Math.random() * 15,
+        type: r < 0.40 ? 'rock' : r < 0.65 ? 'pebble' : r < 0.85 ? 'puddle' : 'bigrock',
+        size: 0.6 + Math.random() * 0.7,
+      });
+    }
+
+    // Draw clipped to this lane
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(trackLeft, 30 + i * laneH, trackWidth, laneH);
+    ctx.clip();
+    for (const o of laneObjs[id]) {
+      drawGroundObj(ctx, horseX + o.relX, groundY, scale * o.size, o.type);
+    }
+    ctx.restore();
+
+    drawDino(ctx, horseX, laneCenterY, scale, player.color, stridePhases[id], isMe);
+
+    // Name label above dino
+    ctx.fillStyle = isMe ? '#fff' : '#ccc';
+    ctx.font = `${isMe ? 'bold ' : ''}12px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${player.horseName} (${player.name})`, horseX, laneCenterY - 48 * scale);
+
+    // Progress % label below dino
+    const pct = Math.round(fraction * 100);
+    ctx.fillStyle = '#888';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${pct}%`, horseX, laneCenterY + 40 * scale);
+  });
+
+  // Track left label
+  ctx.fillStyle = '#aaa';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('START', trackLeft + 4, 22);
+
+  // In-race countdown timer
+  if (raceStartTime) {
+    const elapsed   = (Date.now() - raceStartTime) / 1000;
+    const remaining = Math.max(0, RACE_DURATION_S - elapsed);
+    const mins = Math.floor(remaining / 60);
+    const secs = Math.floor(remaining % 60);
+    const timerStr = `${mins}:${String(secs).padStart(2, '0')}`;
+    const isLow = remaining < 10;
+
+    ctx.save();
+    ctx.font = 'bold 16px monospace';
+    const tw = ctx.measureText(timerStr).width;
+    const tx = W / 2;
+    const ty = 15;
+    const pad = 10;
+
+    // Pill background
+    ctx.fillStyle = isLow ? 'rgba(200,30,30,0.82)' : 'rgba(0,0,0,0.55)';
+    ctx.beginPath();
+    ctx.roundRect(tx - tw / 2 - pad, ty - 12, tw + pad * 2, 20, 5);
+    ctx.fill();
+
+    // Timer text
+    if (isLow) { ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 14; }
+    ctx.fillStyle = isLow ? '#ffcccc' : '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(timerStr, tx, ty);
+    ctx.restore();
+  }
+}
+
+// ─────────────────────────────────────────────
+// Dino renderer (Chrome T-Rex style, pixel-art blocks)
+// ─────────────────────────────────────────────
+function darkenColor(hex, factor) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgb(${Math.round(r * factor)},${Math.round(g * factor)},${Math.round(b * factor)})`;
+}
+
+/*
+ * drawDino — pixel-art Chrome T-Rex, tinted per-player color.
+ *
+ * Coordinate origin: (cx, cy) = hip / center of mass.
+ * All coords are in "design units" scaled by s = laneH/110.
+ * Facing RIGHT.  Pixel-art: all coords Math.round()ed, imageSmoothingEnabled=false.
+ *
+ * T-Rex anatomy (Chrome dino reference):
+ *   - Small two-fingered arms held close to chest
+ *   - Two thick running legs with big feet
+ *   - Large rectangular head with open/closed jaw
+ *   - Tiny tail that sticks back
+ */
+function drawDino(ctx, cx, cy, s, color, phase, isMe) {
+  // snap helper — keeps everything pixel-crisp
+  const p = v => Math.round(v * s);
+  const dark  = darkenColor(color, 0.55);
+  const light = darkenColor(color, 0.80);
+
+  // Running bounce: whole dino bobs up on each step
+  const bob = -Math.abs(Math.sin(phase)) * 5 * s;
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(Math.round(cx), Math.round(cy + bob));
+
+  // Ground shadow
+  const sw = Math.max(4, p(22) * (1 - Math.abs(bob) / (5 * s + 0.001) * 0.5));
+  ctx.fillStyle = 'rgba(0,0,0,0.20)';
+  ctx.beginPath();
+  ctx.ellipse(p(0), p(28), sw, p(3), 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ── Glow for "you" ──
+  if (isMe) { ctx.shadowColor = color; ctx.shadowBlur = 14; }
+
+  // ── Legs (two thick running legs, alternating) ──
+  // Leg anatomy: upper thigh + lower shin + flat foot block
+  function drawLeg(offsetX, legPhase) {
+    const thighLen = 14 * s;
+    const shinLen  = 12 * s;
+    const swing    = 0.65 * Math.sin(legPhase);
+    const bend     = 1.1  * Math.max(0, -Math.sin(legPhase));
+    const lw       = Math.max(3, p(7));
+
+    const hx = p(offsetX), hy = p(14);  // hip joint
+    const kx = hx + thighLen * Math.sin(swing);
+    const ky = hy + thighLen * Math.cos(swing);
+    const fx = kx + shinLen  * Math.sin(swing + bend);
+    const fy = ky + shinLen  * Math.cos(swing + bend);
+
+    // Thigh
+    ctx.strokeStyle = dark;
+    ctx.lineWidth   = lw;
+    ctx.lineCap     = 'butt';
+    ctx.beginPath();
+    ctx.moveTo(hx, hy); ctx.lineTo(kx, ky);
+    ctx.stroke();
+    // Shin
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = Math.max(2, p(5));
+    ctx.beginPath();
+    ctx.moveTo(kx, ky); ctx.lineTo(fx, fy);
+    ctx.stroke();
+    // Foot block (big flat rect, key Chrome dino feature)
+    const footW = p(11), footH = p(5);
+    ctx.fillStyle = dark;
+    ctx.fillRect(Math.round(fx) - Math.round(footW * 0.3), Math.round(fy), footW, footH);
+  }
+
+  drawLeg( 2, phase);              // right leg
+  drawLeg(-3, phase + Math.PI);   // left leg (opposite phase)
+
+  // ── Body: big chunky torso block ──
+  ctx.fillStyle = color;
+  // Main body rectangle
+  ctx.fillRect(p(-18), p(-8), p(28), p(22));
+  // Rounded shoulder bump (slightly taller at front-top)
+  ctx.fillRect(p(-2), p(-14), p(14), p(8));
+  // Belly indent (darker strip along bottom edge)
+  ctx.fillStyle = light;
+  ctx.fillRect(p(-18), p(10), p(28), p(4));
+
+  // ── Tiny T-Rex arms (close to chest, two-fingered) ──
+  ctx.fillStyle = dark;
+  ctx.fillRect(p(6),  p(-6), p(7), p(5));   // upper arm
+  ctx.fillRect(p(11), p(-3), p(5), p(4));   // lower arm / hand
+  // Two tiny finger nubs
+  ctx.fillRect(p(14), p(-4), p(2), p(2));
+  ctx.fillRect(p(14), p(-1), p(2), p(2));
+
+  // ── Tail: stubby, sticks out left and slightly down ──
+  ctx.fillStyle = color;
+  ctx.fillRect(p(-30), p(4),  p(14), p(8));   // main tail block
+  ctx.fillRect(p(-36), p(7),  p(8),  p(6));   // tip
+  ctx.fillStyle = dark;
+  ctx.fillRect(p(-36), p(7),  p(8),  p(2));   // tail dark stripe
+
+  // ── Neck ──
+  ctx.fillStyle = color;
+  ctx.fillRect(p(2), p(-22), p(10), p(12));
+
+  // ── Head: large boxy skull ──
+  const jawOpen = Math.abs(Math.sin(phase)) * 0.4; // jaw bobs open while running
+  ctx.save();
+  ctx.translate(p(10), p(-22));  // base of head
+
+  // Skull block
+  ctx.fillStyle = color;
+  ctx.fillRect(p(-2), p(-18), p(26), p(18));
+
+  // Brow ridge (slightly darker top strip)
+  ctx.fillStyle = dark;
+  ctx.fillRect(p(-2), p(-18), p(26), p(4));
+
+  // Eye — white sclera + dark pupil (Chrome dino has single white-outlined eye)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(p(14), p(-15), p(7), p(7));
+  ctx.fillStyle = '#0d0d0d';
+  ctx.fillRect(p(16), p(-13), p(4), p(4));
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillRect(p(17), p(-13), p(2), p(2));
+
+  // Snout / muzzle extension
+  ctx.fillStyle = color;
+  ctx.fillRect(p(22), p(-8), p(10), p(8 + p(jawOpen * 8) / s | 0));
+
+  // Jaw (lower, moves down as jawOpen increases)
+  const jawDrop = Math.round(jawOpen * 6 * s);
+  ctx.fillStyle = dark;
+  ctx.fillRect(p(22), p(2) + jawDrop, p(10), p(4));
+
+  // Nostril
+  ctx.fillStyle = dark;
+  ctx.fillRect(p(28), p(-5), p(2), p(2));
+
+  ctx.restore();
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────
+// Ground decoration renderer
+// ─────────────────────────────────────────────
+function drawGroundObj(ctx, x, y, s, type) {
+  const p = v => Math.round(v * s);
+  x = Math.round(x);
+  y = Math.round(y);
+
+  if (type === 'rock') {
+    // Rock: two stacked rectangles, darker top
+    ctx.fillStyle = '#6b6b6b';
+    ctx.fillRect(x - p(7), y - p(7), p(14), p(7));
+    ctx.fillStyle = '#888';
+    ctx.fillRect(x - p(5), y - p(11), p(10), p(5));
+    ctx.fillStyle = '#999';
+    ctx.fillRect(x - p(3), y - p(12), p(5), p(2)); // highlight
+  } else if (type === 'bigrock') {
+    // Big rock: chunky 3-block arrangement
+    ctx.fillStyle = '#5a5a5a';
+    ctx.fillRect(x - p(10), y - p(8), p(20), p(8));
+    ctx.fillStyle = '#707070';
+    ctx.fillRect(x - p(7), y - p(14), p(14), p(7));
+    ctx.fillStyle = '#888';
+    ctx.fillRect(x - p(4), y - p(15), p(7), p(2));
+  } else if (type === 'pebble') {
+    // Small pebble cluster
+    ctx.fillStyle = '#777';
+    ctx.fillRect(x - p(4), y - p(4), p(7), p(4));
+    ctx.fillStyle = '#666';
+    ctx.fillRect(x - p(2), y - p(3), p(3), p(3));
+  } else if (type === 'puddle') {
+    // Flat reflective puddle
+    ctx.fillStyle = 'rgba(60,100,160,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(x, y - p(2), p(14), p(4), 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Highlight glint
+    ctx.fillStyle = 'rgba(180,210,255,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(x - p(3), y - p(3), p(5), p(2), -0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ─────────────────────────────────────────────
+// Live stats panel
+// ─────────────────────────────────────────────
+function fmtMbps(mbps) {
+  if (mbps == null) return '—';
+  if (mbps >= 1000) return (mbps / 1000).toFixed(1) + 'G';
+  return mbps.toFixed(0) + 'M';
+}
+
+function updateStatsUI() {
+  const statsRows = document.getElementById('stats-rows');
+  if (!statsRows) return;
+
+  let html = `<div class="stat-header">
+    <span>Player</span><span style="text-align:right">RTT</span><span style="text-align:right">Jitter</span><span style="text-align:right">Speed</span>
+  </div>`;
+
+  Object.keys(players).forEach(id => {
+    const p   = players[id];
+    const pos = serverPositions[id];
+    const isMe = id === myId;
+
+    const rtt    = isMe ? Math.round(avgRtt)  : (pos?.rtt    != null ? pos.rtt    : '—');
+    const jit    = isMe ? Math.round(jitter)  : (pos?.jitter != null ? pos.jitter : '—');
+    const mbpsV  = isMe ? estimatedMbps       : (pos?.mbps   != null ? pos.mbps   : null);
+    const rttStr = typeof rtt === 'number' ? rtt + 'ms' : rtt;
+    const jitStr = typeof jit === 'number' ? jit + 'ms' : jit;
+    const spStr  = fmtMbps(mbpsV);
+
+    html += `<div class="stat-row">
+      <span class="sname" style="color:${p.color}">${escHtml(p.name)}${isMe ? ' ★' : ''}</span>
+      <span class="sval">${rttStr}</span>
+      <span class="sval">${jitStr}</span>
+      <span class="sval stat-mbps">${spStr}</span>
+    </div>`;
+  });
+
+  statsRows.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+// Results
+// ─────────────────────────────────────────────
+socket.on('race-results', (results) => {
+  raceActive = false;
+  lastResults = results;
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+
+  const tbody = document.getElementById('results-body');
+  tbody.innerHTML = '';
+
+  results.forEach(r => {
+    const stats  = r.raceStats || {};
+    const avgR   = stats.avgRtt    != null ? Math.round(stats.avgRtt)    : '—';
+    const avgJ   = stats.avgJitter != null ? Math.round(stats.avgJitter) : '—';
+    const bestR  = stats.bestRtt   != null ? Math.round(stats.bestRtt)   : '—';
+    const worstR = stats.worstRtt  != null ? Math.round(stats.worstRtt)  : '—';
+    const spd    = stats.avgMbps   != null ? fmtMbps(stats.avgMbps)      : '—';
+
+    const rttClass = typeof avgR === 'number' ? (avgR < 80 ? 'good-stat' : avgR < 200 ? '' : 'bad-stat') : '';
+    const jClass   = typeof avgJ === 'number' ? (avgJ < 20 ? 'good-stat' : avgJ < 50 ? '' : 'bad-stat') : '';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="place-badge place-${r.place}">${r.place}</span></td>
+      <td>
+        <span class="color-swatch" style="background:${r.color}"></span>
+        <strong>${escHtml(r.horseName)}</strong>
+        <span style="color:#aaa;font-size:0.85em"> / ${escHtml(r.name)}</span>
+        ${r.id === myId ? '<span style="color:#e94560;font-size:0.8em"> ← you</span>' : ''}
+      </td>
+      <td class="${rttClass}">${avgR}${typeof avgR === 'number' ? 'ms' : ''}</td>
+      <td class="${jClass}">${avgJ}${typeof avgJ === 'number' ? 'ms' : ''}</td>
+      <td class="good-stat">${bestR}${typeof bestR === 'number' ? 'ms' : ''}</td>
+      <td class="bad-stat">${worstR}${typeof worstR === 'number' ? 'ms' : ''}</td>
+      <td class="stat-mbps" style="color:#2ecc71">${spd}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Show/hide Back to Lobby based on organizer role
+  const playAgainBtn = document.getElementById('play-again-btn');
+  const resultsHint  = document.getElementById('results-hint');
+  if (myId === organizerId) {
+    playAgainBtn.style.display = '';
+    resultsHint.textContent = '';
+  } else {
+    playAgainBtn.style.display = 'none';
+    resultsHint.textContent = 'Waiting for the organizer to start a new race…';
+  }
+
+  showScreen('results-screen');
+  // Render the shareable result card after a brief tick so canvas is visible
+  requestAnimationFrame(() => drawResultCard(results));
+});
+
+// Results action buttons
+document.getElementById('play-again-btn').addEventListener('click', () => {
+  socket.emit('return-to-lobby');
+});
+
+// Organizer returning to lobby: in-place reset (keep socket alive — no page reload)
+socket.on('lobby-update', ({ players: playerList, state, organizerId: newOrganizerId }) => {
+  const onResults = document.getElementById('results-screen').classList.contains('active');
+  if (onResults && state === 'lobby') {
+    // Clear race state
+    raceActive = false;
+    raceStartTime = null;
+    laneObjs = {};
+    serverPositions = {};
+    renderPositions = {};
+    stridePhases = {};
+    raceMbps = [];
+    lastResults = [];
+    showScreen('lobby-screen');
+    // Primary lobby-update handler already ran and rebuilt the player list
+  }
+});
+
+document.getElementById('download-csv-btn').addEventListener('click', () => {
+  if (!lastResults.length) return;
+  const headers = ['Place','Dino','Player','Avg RTT (ms)','Avg Jitter (ms)','Best RTT (ms)','Worst RTT (ms)','Avg Speed'];
+  const rows = lastResults.map(r => {
+    const s = r.raceStats || {};
+    return [
+      r.place, r.horseName, r.name,
+      s.avgRtt    != null ? Math.round(s.avgRtt)    : '',
+      s.avgJitter != null ? Math.round(s.avgJitter) : '',
+      s.bestRtt   != null ? Math.round(s.bestRtt)   : '',
+      s.worstRtt  != null ? Math.round(s.worstRtt)  : '',
+      s.avgMbps   != null ? fmtMbps(s.avgMbps)      : '',
+    ].join(',');
+  });
+  const csv  = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'dino-race-results.csv'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('share-x-btn').addEventListener('click', () => {
+  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(buildShareText())}`, '_blank', 'noopener');
+});
+
+document.getElementById('share-wa-btn').addEventListener('click', () => {
+  window.open(`https://wa.me/?text=${encodeURIComponent(buildShareText())}`, '_blank', 'noopener');
+});
+
+document.getElementById('save-card-btn').addEventListener('click', () => {
+  const c = document.getElementById('result-card-canvas');
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/png');
+  a.download = 'dino-race-results.png';
+  a.click();
+});
+
+document.getElementById('copy-challenge-btn').addEventListener('click', () => {
+  const link = buildInviteUrl();
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('copy-challenge-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+});
+
+function buildInviteUrl() {
+  return `${location.origin}/?room=${myRoomId}`;
+}
+
+// ─────────────────────────────────────────────
+// Result card renderer — shareable canvas image
+// ─────────────────────────────────────────────
+function drawResultCard(results) {
+  const c = document.getElementById('result-card-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width;   // 560
+  const H = c.height;  // 300
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = false;
+
+  // ── Background ──
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#0e0e24');
+  bg.addColorStop(1, '#0a0a18');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle dot-grid texture
+  ctx.fillStyle = 'rgba(255,255,255,0.025)';
+  for (let x = 20; x < W; x += 28) {
+    for (let y = 20; y < H; y += 28) {
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  // ── Red top brand stripe ──
+  const topGrad = ctx.createLinearGradient(0, 0, W, 0);
+  topGrad.addColorStop(0, '#e94560');
+  topGrad.addColorStop(1, '#c0392b');
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, W, 5);
+
+  // ── Title ──
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#e94560';
+  ctx.font = 'bold 23px system-ui, sans-serif';
+  ctx.fillText('🦕  DINO RACE', 20, 44);
+
+  ctx.fillStyle = '#444';
+  ctx.font = '10px monospace';
+  ctx.fillText('PING IS SPEED  •  REAL INTERNET RACE', 22, 62);
+
+  // Separator
+  ctx.strokeStyle = '#1e1e3a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(20, 73); ctx.lineTo(W - 20, 73);
+  ctx.stroke();
+
+  // ── Results rows ──
+  const medals = ['🥇', '🥈', '🥉'];
+  const rowH   = 36;
+  const startY = 100;
+  const maxRows = Math.min(results.length, 5);
+
+  // Max RTT for bar scaling
+  const maxRtt = results.reduce((m, r) => {
+    const rtt = r.raceStats?.avgRtt ?? 0;
+    return rtt > m ? rtt : m;
+  }, 300);
+
+  for (let i = 0; i < maxRows; i++) {
+    const r   = results[i];
+    const y   = startY + i * rowH;
+    const isMe = r.id === myId;
+
+    // Self highlight + left accent
+    if (isMe) {
+      ctx.fillStyle = 'rgba(233,69,96,0.1)';
+      ctx.fillRect(14, y - 24, W - 28, 30);
+      ctx.fillStyle = '#e94560';
+      ctx.fillRect(14, y - 24, 3, 30);
+    }
+
+    // Medal / place number
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    if (i < 3) {
+      ctx.font = '16px system-ui';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(medals[i], 22, y);
+    } else {
+      ctx.fillStyle = '#555';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText(`${r.place}.`, 27, y);
+    }
+
+    // Mini dino (uses existing drawDino, scale 0.27, mid-stride pose)
+    drawDino(ctx, 62, y - 8, 0.27, r.color, Math.PI * (0.25 + i * 0.4), false);
+
+    // Player name
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = isMe ? '#ffffff' : '#cccccc';
+    ctx.font = isMe ? 'bold 13px system-ui' : '13px system-ui';
+    ctx.fillText(r.name, 88, y - 2);
+
+    // Dino name in subdued player color
+    ctx.fillStyle = r.color + 'bb';
+    ctx.font = '10px system-ui';
+    ctx.fillText(r.horseName, 88, y + 12);
+
+    // Ping bar + value
+    const rtt = r.raceStats?.avgRtt != null ? Math.round(r.raceStats.avgRtt) : null;
+    const rttColor = rtt == null ? '#444' : rtt < 80 ? '#2ecc71' : rtt < 200 ? '#f39c12' : '#e74c3c';
+    const barMaxW = 110;
+
+    if (rtt != null) {
+      // Background track
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(W - 20 - barMaxW, y - 18, barMaxW, 7);
+      // Filled portion
+      const barW = Math.min(barMaxW, (rtt / Math.max(maxRtt, 1)) * barMaxW);
+      ctx.fillStyle = rttColor + '66';
+      ctx.fillRect(W - 20 - barMaxW, y - 18, barW, 7);
+      ctx.fillStyle = rttColor;
+      ctx.fillRect(W - 20 - barMaxW, y - 18, Math.min(barW, 3), 7);
+      // Value
+      ctx.fillStyle = rttColor;
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${rtt}ms`, W - 20, y - 5);
+    } else {
+      ctx.fillStyle = '#444';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText('—', W - 20, y - 5);
+    }
+
+    // Mbps if available
+    if (r.raceStats?.avgMbps != null) {
+      ctx.fillStyle = '#2ecc71aa';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(fmtMbps(r.raceStats.avgMbps), W - 20, y + 10);
+    }
+  }
+
+  if (results.length > maxRows) {
+    const y = startY + maxRows * rowH - 4;
+    ctx.fillStyle = '#555';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText(`…and ${results.length - maxRows} more`, 26, y);
+  }
+
+  // ── Bottom challenge strip ──
+  const gameUrl = location.origin;
+  const stripH = 52;
+  const stripY = H - stripH;
+
+  const stripGrad = ctx.createLinearGradient(0, stripY, 0, H);
+  stripGrad.addColorStop(0, 'rgba(233,69,96,0.2)');
+  stripGrad.addColorStop(1, 'rgba(233,69,96,0.08)');
+  ctx.fillStyle = stripGrad;
+  ctx.fillRect(0, stripY, W, stripH);
+
+  ctx.strokeStyle = 'rgba(233,69,96,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, stripY); ctx.lineTo(W, stripY);
+  ctx.stroke();
+
+  ctx.fillStyle = '#e94560';
+  ctx.font = 'bold 13px system-ui';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('🔥 Think you can beat us?  Race us →', 20, stripY + 20);
+
+  ctx.fillStyle = '#888';
+  ctx.font = '11px monospace';
+  ctx.fillText(gameUrl, 20, stripY + 38);
+}
+
+function buildShareText() {
+  const inviteUrl = buildInviteUrl();
+  if (!lastResults.length) return `🦕 Dino Race — race your ping!\n🔥 Think you can beat us? ${inviteUrl}`;
+  const me = lastResults.find(r => r.id === myId);
+  const myPlace = me ? me.place : null;
+  const placeStr = myPlace === 1 ? '🥇 I won!' : myPlace === 2 ? '🥈 I came 2nd!' : myPlace === 3 ? '🥉 I came 3rd!' : myPlace ? `I came #${myPlace}!` : '';
+  const rtt = me?.raceStats?.avgRtt != null ? ` (${Math.round(me.raceStats.avgRtt)}ms avg ping)` : '';
+  const podium = lastResults.slice(0, 3).map(r => `${r.place === 1 ? '🥇' : r.place === 2 ? '🥈' : '🥉'} ${r.name}`).join(' · ');
+  return `🦕 Dino Race — where your ping is your speed!\n${placeStr}${rtt}\n${podium}\n🔥 Think you can beat us? ${inviteUrl}`;
+}
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
