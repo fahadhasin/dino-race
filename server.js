@@ -42,6 +42,8 @@ function createRoom() {
     raceEnd: null,
     tickInterval: null,
     lastTick: null,
+    countdownTimeout: null,
+    cleanupTimeout: null,
     usedNames: new Set(),
     usedColors: new Set(),
   };
@@ -149,7 +151,7 @@ function endRace(room) {
   io.to(room.id).emit('race-results', results);
   // Room stays in 'results' state until organizer triggers return-to-lobby,
   // or until a safety cleanup after 30 minutes.
-  setTimeout(() => {
+  room.cleanupTimeout = setTimeout(() => {
     if (!rooms.has(room.id) || room.state !== 'results') return;
     resetRoomToLobby(room);
   }, 30 * 60 * 1000);
@@ -157,9 +159,10 @@ function endRace(room) {
 
 function resetRoomToLobby(room) {
   room.state = 'lobby';
+  if (room.cleanupTimeout) { clearTimeout(room.cleanupTimeout); room.cleanupTimeout = null; }
   for (const p of room.players.values()) {
     p.position = 0; p.velocity = 0; p.finished = false;
-    p.finishTime = null; p.raceStats = null;
+    p.finishTime = null; p.raceStats = null; p.liveStats = null;
   }
   broadcastLobby(room);
 }
@@ -266,6 +269,7 @@ io.on('connection', (socket) => {
     const room = currentRoom;
     if (room.organizerId !== socket.id) return; // only organizer can transfer
     if (!room.players.has(targetId)) return;    // target must be in room
+    if (room.state !== 'lobby') return;         // no mid-race transfers
     room.organizerId = targetId;
     broadcastLobby(room);
   });
@@ -290,13 +294,14 @@ io.on('connection', (socket) => {
       p.finished = false;
       p.finishTime = null;
       p.raceStats = null;
+      p.liveStats = null;
     }
 
     room.state = 'countdown';
     const raceStartTimestamp = Date.now() + 5000;
     io.to(room.id).emit('countdown-start', { raceStartTimestamp });
 
-    setTimeout(() => {
+    room.countdownTimeout = setTimeout(() => {
       if (room.state !== 'countdown') return;
       room.state = 'racing';
       room.raceStart = Date.now();
@@ -314,12 +319,20 @@ io.on('connection', (socket) => {
     room.players.delete(socket.id);
 
     if (room.players.size === 0) {
-      if (room.tickInterval) clearInterval(room.tickInterval);
+      // Last player gone — clean up everything
+      if (room.tickInterval)     clearInterval(room.tickInterval);
+      if (room.countdownTimeout) clearTimeout(room.countdownTimeout);
+      if (room.cleanupTimeout)   clearTimeout(room.cleanupTimeout);
       rooms.delete(room.id);
     } else {
       // If organizer left, pass the role to the next player in the room
       if (room.organizerId === socket.id) {
         room.organizerId = room.players.keys().next().value;
+      }
+      // If a player drops mid-race and everyone remaining has finished, end it
+      if (room.state === 'racing') {
+        const allFinished = [...room.players.values()].every(p => p.finished);
+        if (allFinished) { endRace(room); return; }
       }
       broadcastLobby(room);
     }

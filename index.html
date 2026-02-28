@@ -9,8 +9,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: #1a1a2e;
-    color: #eee;
+    background: #faf5ee;
+    color: #3d2b1f;
     font-family: 'Segoe UI', system-ui, sans-serif;
     min-height: 100vh;
     display: flex;
@@ -29,25 +29,25 @@
   }
   #join-screen h1 { font-size: 2.2rem; margin-bottom: 6px; }
   #join-screen .subtitle {
-    color: #aaa;
+    color: #8b7355;
     font-size: 0.9rem;
     margin-bottom: 28px;
   }
   .name-row { max-width: 340px; margin: 0 auto 24px; text-align: left; }
   .form-group { margin-bottom: 14px; text-align: left; }
-  .form-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 5px; }
+  .form-group label { display: block; font-size: 0.85rem; color: #8b7355; margin-bottom: 5px; }
   .form-group input {
     width: 100%;
-    background: #16213e;
-    border: 1px solid #333;
+    background: #ffffff;
+    border: 1px solid #d4c5a9;
     border-radius: 6px;
-    color: #eee;
+    color: #3d2b1f;
     font-size: 1rem;
     padding: 10px 12px;
     outline: none;
     transition: border-color 0.2s;
   }
-  .form-group input:focus { border-color: #e94560; }
+  .form-group input:focus { border-color: #ff6b6b; }
   /* Two-card layout */
   .join-cards {
     display: grid;
@@ -56,8 +56,8 @@
     margin: 0 auto;
   }
   .join-card {
-    background: #16213e;
-    border: 1px solid #2a2a4a;
+    background: #ffffff;
+    border: 1px solid #d4c5a9;
     border-radius: 12px;
     padding: 28px 20px 22px;
     text-align: center;
@@ -65,11 +65,11 @@
     display: flex;
     flex-direction: column;
   }
-  .join-card:hover { border-color: #555; }
-  .join-card.highlighted { border-color: #e94560; background: rgba(233,69,96,0.06); }
+  .join-card:hover { border-color: #b8a88a; }
+  .join-card.highlighted { border-color: #ff6b6b; background: rgba(255,107,107,0.06); }
   .join-card-icon { font-size: 2rem; margin-bottom: 10px; }
   .join-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
-  .join-card p { color: #888; font-size: 0.82rem; margin-bottom: 18px; line-height: 1.5; flex: 1; }
+  .join-card p { color: #8b7355; font-size: 0.82rem; margin-bottom: 18px; line-height: 1.5; flex: 1; }
   .join-card .code-input {
     text-align: center;
     font-size: 1.2rem;
@@ -89,8 +89,8 @@
   #join-screen.invited-mode #create-card {
     order: 2;
     padding: 12px 16px;
-    background: rgba(22, 33, 62, 0.45);
-    border: 1px dashed #333;
+    background: rgba(255,255,255,0.5);
+    border: 1px dashed #d4c5a9;
     flex-direction: row;
     align-items: center;
     gap: 12px;
@@ -103,12 +103,12 @@
   }
   #join-screen.invited-mode #create-card h3 {
     font-size: 0.85rem;
-    color: #777;
+    color: #9e8b6e;
     margin-bottom: 2px;
   }
   #join-screen.invited-mode #create-card p {
     font-size: 0.74rem;
-    color: #555;
+    color: #8b7355;
     margin-bottom: 0;
     line-height: 1.3;
   }
@@ -119,10 +119,10 @@
     font-size: 0.82rem;
     margin-top: 0;
     flex-shrink: 0;
-    background: #2a2a4a;
+    background: #f0e6d3;
   }
   .btn {
-    background: #e94560;
+    background: #ff6b6b;
     border: none;
     border-radius: 6px;
     color: #fff;
@@ -138,8 +138,9 @@
   .btn:active { transform: scale(0.98); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-secondary {
-    background: #16213e;
-    border: 1px solid #333;
+    background: #ffffff;
+    border: 1px solid #d4c5a9;
+    color: #3d2b1f;
     margin-top: 10px;
   }
   .error-msg {
@@ -162,27 +163,27 @@
     font-size: 1.4rem;
     font-weight: 700;
     letter-spacing: 4px;
-    color: #e94560;
-    background: #16213e;
+    color: #ff6b6b;
+    background: #ffffff;
     border-radius: 6px;
     padding: 6px 16px;
   }
   .copy-btn {
-    background: #16213e;
-    border: 1px solid #444;
+    background: #ffffff;
+    border: 1px solid #d4c5a9;
     border-radius: 6px;
-    color: #ccc;
+    color: #6b5b45;
     cursor: pointer;
     font-size: 0.85rem;
     padding: 6px 14px;
     transition: background 0.2s;
   }
-  .copy-btn:hover { background: #0f3460; }
+  .copy-btn:hover { background: #f0e6d3; }
   .player-list { margin-bottom: 20px; }
-  .player-list h3 { font-size: 0.9rem; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .player-list h3 { font-size: 0.9rem; color: #8b7355; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
   .player-card {
     align-items: center;
-    background: #16213e;
+    background: #ffffff;
     border-radius: 8px;
     display: flex;
     gap: 12px;
@@ -196,15 +197,15 @@
     width: 24px;
   }
   .player-card .pname { font-weight: 600; }
-  .player-card .hname { color: #aaa; font-size: 0.85rem; }
-  .lobby-hint { color: #666; font-size: 0.85rem; margin-top: 10px; }
+  .player-card .hname { color: #8b7355; font-size: 0.85rem; }
+  .lobby-hint { color: #a0926e; font-size: 0.85rem; margin-top: 10px; }
   #start-btn { max-width: 240px; }
   .crown { font-size: 0.9em; margin-left: 4px; }
   .make-organizer-btn {
     background: none;
-    border: 1px solid #444;
+    border: 1px solid #d4c5a9;
     border-radius: 5px;
-    color: #aaa;
+    color: #8b7355;
     cursor: pointer;
     font-size: 0.72rem;
     margin-left: auto;
@@ -216,11 +217,11 @@
 
   /* ── Race screen ── */
   #race-screen { max-width: 100%; padding: 0; position: relative; }
-  #race-canvas { display: block; width: 100%; background: #0d0d1a; }
+  #race-canvas { display: block; width: 100%; background: #87CEEB; }
 
   #stats-overlay {
-    background: rgba(10,10,26,0.92);
-    border: 1px solid rgba(233,69,96,0.35);
+    background: rgba(255,248,235,0.95);
+    border: 1px solid rgba(255,107,107,0.4);
     border-radius: 8px;
     font-size: 0.74rem;
     padding: 10px 14px;
@@ -232,7 +233,7 @@
     display: none;
   }
   #stats-overlay.visible { display: block; }
-  #stats-overlay h4 { color: #e94560; font-size: 0.72rem; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 1px; }
+  #stats-overlay h4 { color: #ff6b6b; font-size: 0.72rem; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 1px; }
   .stat-header, .stat-row {
     display: grid;
     grid-template-columns: 1fr 54px 54px 72px;
@@ -240,7 +241,7 @@
     font-family: monospace;
     font-variant-numeric: tabular-nums;
   }
-  .stat-header { color: #555; font-size: 0.66rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 5px; margin-bottom: 4px; }
+  .stat-header { color: #8b7355; font-size: 0.66rem; text-transform: uppercase; border-bottom: 1px solid rgba(100,70,30,0.15); padding-bottom: 5px; margin-bottom: 4px; }
   .stat-row { margin-bottom: 3px; }
   .stat-row:last-child { margin-bottom: 0; }
   .stat-row .sname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -249,7 +250,7 @@
 
   #countdown-overlay {
     align-items: center;
-    background: rgba(0,0,0,0.75);
+    background: rgba(255,248,235,0.85);
     display: none;
     flex-direction: column;
     height: 100%;
@@ -261,18 +262,18 @@
   }
   #countdown-overlay.visible { display: flex; }
   #countdown-number {
-    color: #e94560;
+    color: #ff6b6b;
     font-size: 8rem;
     font-weight: 900;
     line-height: 1;
-    text-shadow: 0 0 40px #e94560aa;
+    text-shadow: 0 0 40px #ff6b6baa;
   }
-  #countdown-label { color: #aaa; font-size: 1.2rem; margin-top: 10px; }
+  #countdown-label { color: #8b7355; font-size: 1.2rem; margin-top: 10px; }
 
   /* ── Results screen ── */
   #results-screen { text-align: center; }
   #results-screen h2 { font-size: 2rem; margin-bottom: 6px; }
-  #results-screen .subtitle { color: #aaa; font-size: 0.9rem; margin-bottom: 24px; }
+  #results-screen .subtitle { color: #8b7355; font-size: 0.9rem; margin-bottom: 24px; }
   .results-table {
     width: 100%;
     border-collapse: collapse;
@@ -282,20 +283,20 @@
     .col-hide-mobile { display: none; }
   }
   .results-table th {
-    color: #aaa;
+    color: #8b7355;
     font-size: 0.78rem;
     font-weight: 600;
     padding: 8px 12px;
     text-align: left;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #d4c5a9;
   }
   .results-table td {
     padding: 10px 12px;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid #e8dcc8;
   }
-  .results-table tr:first-child td { background: rgba(233,69,96,0.12); }
+  .results-table tr:first-child td { background: rgba(255,107,107,0.12); }
   .place-badge {
     background: #333;
     border-radius: 50%;
@@ -323,8 +324,8 @@
 
   /* ── Challenge zone ── */
   .challenge-zone {
-    background: linear-gradient(135deg, rgba(233,69,96,0.07), transparent);
-    border: 1px solid rgba(233,69,96,0.22);
+    background: linear-gradient(135deg, rgba(255,107,107,0.07), transparent);
+    border: 1px solid rgba(255,107,107,0.22);
     border-radius: 14px;
     margin: 0 auto 28px;
     padding: 22px 22px 18px;
@@ -333,17 +334,17 @@
   .challenge-headline {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #e94560;
+    color: #ff6b6b;
     margin-bottom: 4px;
   }
   .challenge-sub {
-    color: #888;
+    color: #8b7355;
     font-size: 0.84rem;
     margin-bottom: 16px;
   }
   #result-card-canvas {
     border-radius: 10px;
-    box-shadow: 0 4px 28px rgba(0,0,0,0.6);
+    box-shadow: 0 4px 28px rgba(140,110,60,0.25);
     display: block;
     margin: 0 auto 16px;
     max-width: 100%;
@@ -358,14 +359,14 @@
 
   /* ── Collapsible full stats ── */
   .stats-details {
-    border: 1px solid #2a2a4a;
+    border: 1px solid #d4c5a9;
     border-radius: 8px;
     margin: 0 auto 20px;
     overflow: hidden;
   }
   .stats-details > summary {
-    background: rgba(255,255,255,0.02);
-    color: #888;
+    background: rgba(0,0,0,0.03);
+    color: #8b7355;
     cursor: pointer;
     font-size: 0.86rem;
     list-style: none;
@@ -373,9 +374,9 @@
     user-select: none;
   }
   .stats-details > summary::-webkit-details-marker { display: none; }
-  .stats-details > summary::before { content: '▶  '; font-size: 0.65rem; color: #666; }
+  .stats-details > summary::before { content: '▶  '; font-size: 0.65rem; color: #a0926e; }
   .stats-details[open] > summary::before { content: '▼  '; }
-  .stats-details > summary:hover { color: #ccc; }
+  .stats-details > summary:hover { color: #6b5b45; }
   .stats-details .results-table { margin-bottom: 0; }
 
   .results-actions {
@@ -387,8 +388,8 @@
     max-width: 700px;
   }
   .action-btn { width: auto; margin: 0; padding: 10px 18px; font-size: 0.9rem; }
-  #play-again-btn { background: #e94560; }
-  .results-hint { color: #666; font-size: 0.82rem; margin-top: 6px; }
+  #play-again-btn { background: #ff6b6b; }
+  .results-hint { color: #a0926e; font-size: 0.82rem; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -556,6 +557,11 @@ let stridePhases = {};   // socketId -> radians, advances per frame
 let laneObjs = {};       // socketId -> [{relX, type, size}] ground decorations
 let lastFrameTime = 0;
 
+// Ping loop handles — stored so they can be cancelled
+let pingRunning = false;
+let speedIntervalId = null;
+let velocityIntervalId = null;
+
 // ─────────────────────────────────────────────
 // Screen management
 // ─────────────────────────────────────────────
@@ -665,6 +671,21 @@ socket.on('lobby-update', ({ players: playerList, state, organizerId: newOrganiz
   playerList.forEach(p => { players[p.id] = p; });
   organizerId = newOrganizerId;
 
+  // If returning from results to lobby, reset all race state first
+  const onResults = document.getElementById('results-screen').classList.contains('active');
+  if (onResults && state === 'lobby') {
+    raceActive = false;
+    raceStartTime = null;
+    lastFrameTime = 0;
+    laneObjs = {};
+    serverPositions = {};
+    renderPositions = {};
+    stridePhases = {};
+    raceMbps = [];
+    lastResults = [];
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  }
+
   const count = playerList.length;
   const amOrganizer = myId === organizerId;
   document.getElementById('player-count').textContent = count;
@@ -682,19 +703,12 @@ socket.on('lobby-update', ({ players: playerList, state, organizerId: newOrganiz
         <div class="pname">
           ${escHtml(p.name)}
           ${isOrganizer ? '<span class="crown" title="Organizer">👑</span>' : ''}
-          ${isMe ? '<span style="color:#e94560;font-size:0.8em"> (you)</span>' : ''}
+          ${isMe ? '<span style="color:#ff6b6b;font-size:0.8em"> (you)</span>' : ''}
         </div>
         <div class="hname">🦕 ${escHtml(p.horseName)}</div>
       </div>
       ${amOrganizer && !isMe ? `<button class="make-organizer-btn" data-id="${p.id}">Make organizer</button>` : ''}`;
     cards.appendChild(card);
-  });
-
-  // Wire up transfer buttons
-  cards.querySelectorAll('.make-organizer-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      socket.emit('transfer-organizer', { targetId: btn.dataset.id });
-    });
   });
 
   const hint = document.getElementById('lobby-hint');
@@ -716,10 +730,13 @@ socket.on('lobby-update', ({ players: playerList, state, organizerId: newOrganiz
     }
   }
 
-  // Only auto-navigate to lobby if we're not on the results screen
-  // (results screen handles its own transition via the return-to-lobby flow)
-  const onResults = document.getElementById('results-screen').classList.contains('active');
-  if (!onResults && state === 'lobby') showScreen('lobby-screen');
+  if (state === 'lobby') showScreen('lobby-screen');
+});
+
+// Organizer-transfer via event delegation — one listener, never duplicated
+document.getElementById('player-cards').addEventListener('click', e => {
+  const btn = e.target.closest('.make-organizer-btn');
+  if (btn) socket.emit('transfer-organizer', { targetId: btn.dataset.id });
 });
 
 // ─────────────────────────────────────────────
@@ -795,6 +812,7 @@ socket.on('positions', (posData) => {
 const RTT_ENDPOINT = 'https://speed.cloudflare.com/cdn-cgi/trace';
 
 async function measureRtt() {
+  if (!pingRunning) return;
   try {
     const t0 = performance.now();
     const res = await fetch(RTT_ENDPOINT, { cache: 'no-store' });
@@ -823,13 +841,22 @@ async function measureSpeed() {
 }
 
 function startPingLoop() {
-  measureRtt();                          // first RTT sample immediately
-  measureSpeed();                        // first Mbps sample immediately
-  setInterval(measureSpeed, 8000);       // Mbps every 8 s
-  setInterval(() => {                    // velocity + UI every 500 ms
+  if (pingRunning) return;              // don't start twice
+  pingRunning = true;
+  measureRtt();                         // first RTT sample immediately
+  measureSpeed();                       // first Mbps sample immediately
+  speedIntervalId    = setInterval(measureSpeed, 8000);  // Mbps every 8 s
+  velocityIntervalId = setInterval(() => {               // velocity + UI every 500 ms
     sendVelocity();
     updateStatsUI();
   }, 500);
+}
+
+function stopPingLoop() {
+  pingRunning = false;
+  clearInterval(speedIntervalId);
+  clearInterval(velocityIntervalId);
+  speedIntervalId = velocityIntervalId = null;
 }
 
 function computeStats() {
@@ -934,8 +961,11 @@ function drawFrame(dt) {
   const W = canvas.width;
   const H = canvas.height;
 
-  // Background
-  ctx.fillStyle = '#1a1004';
+  // Background — bright sky gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+  skyGrad.addColorStop(0, '#87CEEB');
+  skyGrad.addColorStop(1, '#b8e6ff');
+  ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, H);
 
   const playerIds = Object.keys(players);
@@ -951,17 +981,17 @@ function drawFrame(dt) {
   // Draw lanes with richer background
   playerIds.forEach((id, i) => {
     const y = 30 + i * laneH;
-    // Alternating dirt-brown lanes
-    ctx.fillStyle = i % 2 === 0 ? '#2a1f14' : '#251c12';
+    // Alternating sandy dirt lanes
+    ctx.fillStyle = i % 2 === 0 ? '#d4a76a' : '#c9956b';
     ctx.fillRect(0, y, W, laneH);
 
-    // Green grass strip at top and bottom of each lane
-    ctx.fillStyle = '#1a4a1a';
+    // Lush green grass strip at top and bottom of each lane
+    ctx.fillStyle = '#4CAF50';
     ctx.fillRect(0, y, W, 8);
     ctx.fillRect(0, y + laneH - 8, W, 8);
 
     // Lane divider
-    ctx.strokeStyle = '#3a2a1a';
+    ctx.strokeStyle = '#a08050';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, y + laneH);
@@ -972,7 +1002,7 @@ function drawFrame(dt) {
   // Faint distance markers at 25%, 50%, 75%
   [0.25, 0.5, 0.75].forEach(frac => {
     const mx = trackLeft + frac * trackWidth;
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.strokeStyle = 'rgba(100,70,30,0.15)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 8]);
     ctx.beginPath();
@@ -980,7 +1010,7 @@ function drawFrame(dt) {
     ctx.lineTo(mx, 30 + trackH);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillStyle = 'rgba(100,70,30,0.3)';
     ctx.font = '9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(`${Math.round(frac * 100)}%`, mx, 26);
@@ -1021,7 +1051,8 @@ function drawFrame(dt) {
 
     // Smooth interpolation toward server position
     const prev = renderPositions[id] ?? serverPos;
-    renderPositions[id] = prev + (serverPos - prev) * 0.3;
+    // Snap to finish immediately when server confirms — no interpolation lag
+    renderPositions[id] = serverPos >= FINISH_POS ? FINISH_POS : prev + (serverPos - prev) * 0.3;
 
     // Jitter stutter: randomly freeze if jitter > 40ms and it's my dino
     let displayPos = renderPositions[id];
@@ -1033,7 +1064,7 @@ function drawFrame(dt) {
       }
     }
 
-    const finished = displayPos >= FINISH_POS;
+    const finished = serverPos >= FINISH_POS;
 
     // Freeze stride at finish line — dino stands still after crossing
     if (!finished) {
@@ -1102,21 +1133,21 @@ function drawFrame(dt) {
     drawDino(ctx, horseX, laneCenterY, scale, player.color, stridePhases[id], isMe);
 
     // Name label above dino
-    ctx.fillStyle = isMe ? '#fff' : '#ccc';
+    ctx.fillStyle = isMe ? '#ffffff' : '#f5f0e0';
     ctx.font = `${isMe ? 'bold ' : ''}12px system-ui`;
     ctx.textAlign = 'center';
     ctx.fillText(`${player.horseName} (${player.name})`, horseX, laneCenterY - 48 * scale);
 
     // Progress % label below dino
     const pct = Math.round(fraction * 100);
-    ctx.fillStyle = '#888';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(`${pct}%`, horseX, laneCenterY + 40 * scale);
   });
 
   // Track left label
-  ctx.fillStyle = '#aaa';
+  ctx.fillStyle = '#6b5b45';
   ctx.font = '10px monospace';
   ctx.textAlign = 'left';
   ctx.fillText('START', trackLeft + 4, 22);
@@ -1138,7 +1169,7 @@ function drawFrame(dt) {
     const pad = 10;
 
     // Pill background
-    ctx.fillStyle = isLow ? 'rgba(200,30,30,0.82)' : 'rgba(0,0,0,0.55)';
+    ctx.fillStyle = isLow ? 'rgba(200,30,30,0.82)' : 'rgba(60,40,20,0.6)';
     ctx.beginPath();
     ctx.roundRect(tx - tw / 2 - pad, ty - 12, tw + pad * 2, 20, 5);
     ctx.fill();
@@ -1191,7 +1222,7 @@ function drawDino(ctx, cx, cy, s, color, phase, isMe) {
 
   // Ground shadow
   const sw = Math.max(4, p(22) * (1 - Math.abs(bob) / (5 * s + 0.001) * 0.5));
-  ctx.fillStyle = 'rgba(0,0,0,0.20)';
+  ctx.fillStyle = 'rgba(60,30,0,0.18)';
   ctx.beginPath();
   ctx.ellipse(p(0), p(28), sw, p(3), 0, 0, Math.PI * 2);
   ctx.fill();
@@ -1314,35 +1345,35 @@ function drawGroundObj(ctx, x, y, s, type) {
   y = Math.round(y);
 
   if (type === 'rock') {
-    // Rock: two stacked rectangles, darker top
-    ctx.fillStyle = '#6b6b6b';
+    // Rock: warm brown rock
+    ctx.fillStyle = '#a08050';
     ctx.fillRect(x - p(7), y - p(7), p(14), p(7));
-    ctx.fillStyle = '#888';
+    ctx.fillStyle = '#bfa870';
     ctx.fillRect(x - p(5), y - p(11), p(10), p(5));
-    ctx.fillStyle = '#999';
+    ctx.fillStyle = '#d4c5a0';
     ctx.fillRect(x - p(3), y - p(12), p(5), p(2)); // highlight
   } else if (type === 'bigrock') {
-    // Big rock: chunky 3-block arrangement
-    ctx.fillStyle = '#5a5a5a';
+    // Big rock: warm sandstone
+    ctx.fillStyle = '#8b7355';
     ctx.fillRect(x - p(10), y - p(8), p(20), p(8));
-    ctx.fillStyle = '#707070';
+    ctx.fillStyle = '#bfa870';
     ctx.fillRect(x - p(7), y - p(14), p(14), p(7));
-    ctx.fillStyle = '#888';
+    ctx.fillStyle = '#d4c5a0';
     ctx.fillRect(x - p(4), y - p(15), p(7), p(2));
   } else if (type === 'pebble') {
-    // Small pebble cluster
-    ctx.fillStyle = '#777';
+    // Small tropical fern/bush
+    ctx.fillStyle = '#4CAF50';
     ctx.fillRect(x - p(4), y - p(4), p(7), p(4));
-    ctx.fillStyle = '#666';
+    ctx.fillStyle = '#388E3C';
     ctx.fillRect(x - p(2), y - p(3), p(3), p(3));
   } else if (type === 'puddle') {
-    // Flat reflective puddle
-    ctx.fillStyle = 'rgba(60,100,160,0.55)';
+    // Small flower patch
+    ctx.fillStyle = 'rgba(255,180,50,0.7)';
     ctx.beginPath();
     ctx.ellipse(x, y - p(2), p(14), p(4), 0, 0, Math.PI * 2);
     ctx.fill();
-    // Highlight glint
-    ctx.fillStyle = 'rgba(180,210,255,0.45)';
+    // Coral highlight
+    ctx.fillStyle = 'rgba(255,100,100,0.6)';
     ctx.beginPath();
     ctx.ellipse(x - p(3), y - p(3), p(5), p(2), -0.3, 0, Math.PI * 2);
     ctx.fill();
@@ -1417,8 +1448,8 @@ socket.on('race-results', (results) => {
       <td>
         <span class="color-swatch" style="background:${r.color}"></span>
         <strong>${escHtml(r.horseName)}</strong>
-        <span style="color:#aaa;font-size:0.85em"> / ${escHtml(r.name)}</span>
-        ${r.id === myId ? '<span style="color:#e94560;font-size:0.8em"> ← you</span>' : ''}
+        <span style="color:#8b7355;font-size:0.85em"> / ${escHtml(r.name)}</span>
+        ${r.id === myId ? '<span style="color:#ff6b6b;font-size:0.8em"> ← you</span>' : ''}
       </td>
       <td class="${rttClass}">${avgR}${typeof avgR === 'number' ? 'ms' : ''}</td>
       <td class="${jClass}">${avgJ}${typeof avgJ === 'number' ? 'ms' : ''}</td>
@@ -1447,24 +1478,6 @@ socket.on('race-results', (results) => {
 // Results action buttons
 document.getElementById('play-again-btn').addEventListener('click', () => {
   socket.emit('return-to-lobby');
-});
-
-// Organizer returning to lobby: in-place reset (keep socket alive — no page reload)
-socket.on('lobby-update', ({ players: playerList, state, organizerId: newOrganizerId }) => {
-  const onResults = document.getElementById('results-screen').classList.contains('active');
-  if (onResults && state === 'lobby') {
-    // Clear race state
-    raceActive = false;
-    raceStartTime = null;
-    laneObjs = {};
-    serverPositions = {};
-    renderPositions = {};
-    stridePhases = {};
-    raceMbps = [];
-    lastResults = [];
-    showScreen('lobby-screen');
-    // Primary lobby-update handler already ran and rebuilt the player list
-  }
 });
 
 document.getElementById('download-csv-btn').addEventListener('click', () => {
@@ -1534,39 +1547,39 @@ function drawResultCard(results) {
 
   // ── Background ──
   const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#0e0e24');
-  bg.addColorStop(1, '#0a0a18');
+  bg.addColorStop(0, '#faf5ee');
+  bg.addColorStop(1, '#f0e6d3');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // Subtle dot-grid texture
-  ctx.fillStyle = 'rgba(255,255,255,0.025)';
+  ctx.fillStyle = 'rgba(160,130,80,0.06)';
   for (let x = 20; x < W; x += 28) {
     for (let y = 20; y < H; y += 28) {
       ctx.fillRect(x, y, 1, 1);
     }
   }
 
-  // ── Red top brand stripe ──
+  // ── Coral top brand stripe ──
   const topGrad = ctx.createLinearGradient(0, 0, W, 0);
-  topGrad.addColorStop(0, '#e94560');
-  topGrad.addColorStop(1, '#c0392b');
+  topGrad.addColorStop(0, '#ff6b6b');
+  topGrad.addColorStop(1, '#e05555');
   ctx.fillStyle = topGrad;
   ctx.fillRect(0, 0, W, 5);
 
   // ── Title ──
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#e94560';
+  ctx.fillStyle = '#ff6b6b';
   ctx.font = 'bold 23px system-ui, sans-serif';
   ctx.fillText('🦕  DINO RACE', 20, 44);
 
-  ctx.fillStyle = '#444';
+  ctx.fillStyle = '#8b7355';
   ctx.font = '10px monospace';
   ctx.fillText('PING IS SPEED  •  REAL INTERNET RACE', 22, 62);
 
   // Separator
-  ctx.strokeStyle = '#1e1e3a';
+  ctx.strokeStyle = '#b8a88a';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(20, 73); ctx.lineTo(W - 20, 73);
@@ -1591,9 +1604,9 @@ function drawResultCard(results) {
 
     // Self highlight + left accent
     if (isMe) {
-      ctx.fillStyle = 'rgba(233,69,96,0.1)';
+      ctx.fillStyle = 'rgba(255,107,107,0.1)';
       ctx.fillRect(14, y - 24, W - 28, 30);
-      ctx.fillStyle = '#e94560';
+      ctx.fillStyle = '#ff6b6b';
       ctx.fillRect(14, y - 24, 3, 30);
     }
 
@@ -1602,10 +1615,10 @@ function drawResultCard(results) {
     ctx.textAlign = 'left';
     if (i < 3) {
       ctx.font = '16px system-ui';
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = '#3d2b1f';
       ctx.fillText(medals[i], 22, y);
     } else {
-      ctx.fillStyle = '#555';
+      ctx.fillStyle = '#8b7355';
       ctx.font = 'bold 12px monospace';
       ctx.fillText(`${r.place}.`, 27, y);
     }
@@ -1613,48 +1626,40 @@ function drawResultCard(results) {
     // Mini dino (uses existing drawDino, scale 0.27, mid-stride pose)
     drawDino(ctx, 62, y - 8, 0.27, r.color, Math.PI * (0.25 + i * 0.4), false);
 
-    // Player name
+    // Player name (top text line of the row)
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = isMe ? '#ffffff' : '#cccccc';
+    ctx.fillStyle = isMe ? '#3d2b1f' : '#5a4a3a';
     ctx.font = isMe ? 'bold 13px system-ui' : '13px system-ui';
-    ctx.fillText(r.name, 88, y - 2);
+    ctx.fillText(r.name, 88, y - 4);
 
-    // Dino name in subdued player color
-    ctx.fillStyle = r.color + 'bb';
+    // Dino name (bottom text line of the row)
+    ctx.fillStyle = r.color + 'cc';
     ctx.font = '10px system-ui';
-    ctx.fillText(r.horseName, 88, y + 12);
+    ctx.fillText(r.horseName, 88, y + 10);
 
-    // Ping bar + value
+    // RTT value — aligned with player name (top line)
     const rtt = r.raceStats?.avgRtt != null ? Math.round(r.raceStats.avgRtt) : null;
-    const rttColor = rtt == null ? '#444' : rtt < 80 ? '#2ecc71' : rtt < 200 ? '#f39c12' : '#e74c3c';
-    const barMaxW = 110;
+    const rttColor = rtt == null ? '#a0926e' : rtt < 80 ? '#2ecc71' : rtt < 200 ? '#f39c12' : '#e74c3c';
+    const barMaxW = 100;
 
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = rttColor;
+    ctx.fillText(rtt != null ? `${rtt}ms` : '—', W - 20, y - 4);
+
+    // RTT bar — sits below the text lines
     if (rtt != null) {
-      // Background track
-      ctx.fillStyle = 'rgba(255,255,255,0.05)';
-      ctx.fillRect(W - 20 - barMaxW, y - 18, barMaxW, 7);
-      // Filled portion
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(W - 20 - barMaxW, y + 14, barMaxW, 5);
       const barW = Math.min(barMaxW, (rtt / Math.max(maxRtt, 1)) * barMaxW);
-      ctx.fillStyle = rttColor + '66';
-      ctx.fillRect(W - 20 - barMaxW, y - 18, barW, 7);
-      ctx.fillStyle = rttColor;
-      ctx.fillRect(W - 20 - barMaxW, y - 18, Math.min(barW, 3), 7);
-      // Value
-      ctx.fillStyle = rttColor;
-      ctx.font = 'bold 12px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${rtt}ms`, W - 20, y - 5);
-    } else {
-      ctx.fillStyle = '#444';
-      ctx.font = '12px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText('—', W - 20, y - 5);
+      ctx.fillStyle = rttColor + '88';
+      ctx.fillRect(W - 20 - barMaxW, y + 14, barW, 5);
     }
 
-    // Mbps if available
+    // Mbps — aligned with dino name (bottom line)
     if (r.raceStats?.avgMbps != null) {
-      ctx.fillStyle = '#2ecc71aa';
+      ctx.fillStyle = '#2ecc71';
       ctx.font = '10px monospace';
       ctx.textAlign = 'right';
       ctx.fillText(fmtMbps(r.raceStats.avgMbps), W - 20, y + 10);
@@ -1663,7 +1668,7 @@ function drawResultCard(results) {
 
   if (results.length > maxRows) {
     const y = startY + maxRows * rowH - 4;
-    ctx.fillStyle = '#555';
+    ctx.fillStyle = '#8b7355';
     ctx.font = '10px system-ui';
     ctx.textAlign = 'left';
     ctx.fillText(`…and ${results.length - maxRows} more`, 26, y);
@@ -1675,24 +1680,24 @@ function drawResultCard(results) {
   const stripY = H - stripH;
 
   const stripGrad = ctx.createLinearGradient(0, stripY, 0, H);
-  stripGrad.addColorStop(0, 'rgba(233,69,96,0.2)');
-  stripGrad.addColorStop(1, 'rgba(233,69,96,0.08)');
+  stripGrad.addColorStop(0, 'rgba(255,107,107,0.15)');
+  stripGrad.addColorStop(1, 'rgba(255,107,107,0.05)');
   ctx.fillStyle = stripGrad;
   ctx.fillRect(0, stripY, W, stripH);
 
-  ctx.strokeStyle = 'rgba(233,69,96,0.3)';
+  ctx.strokeStyle = 'rgba(255,107,107,0.25)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(0, stripY); ctx.lineTo(W, stripY);
   ctx.stroke();
 
-  ctx.fillStyle = '#e94560';
+  ctx.fillStyle = '#ff6b6b';
   ctx.font = 'bold 13px system-ui';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('🔥 Think you can beat us?  Race us →', 20, stripY + 20);
 
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = '#8b7355';
   ctx.font = '11px monospace';
   ctx.fillText(gameUrl, 20, stripY + 38);
 }
@@ -1711,6 +1716,12 @@ function buildShareText() {
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
+socket.on('disconnect', () => {
+  raceActive = false;
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  stopPingLoop();
+});
+
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
