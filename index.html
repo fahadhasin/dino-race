@@ -879,16 +879,20 @@ function sendVelocity() {
 
 function buildRaceStats() {
   if (raceRtts.length === 0) return null;
-  const mean = raceRtts.reduce((a, b) => a + b, 0) / raceRtts.length;
-  const variance = raceRtts.reduce((s, v) => s + (v - mean) ** 2, 0) / raceRtts.length;
+  // Apply the same baseline correction used in computeVelocity() so that
+  // results, canvas card, CSV, and share text all reflect effective values,
+  // not the raw relay/tunnel overhead.
+  const effRtts = raceRtts.map(r => Math.max(5, r - baselineRtt * 0.9));
+  const mean = effRtts.reduce((a, b) => a + b, 0) / effRtts.length;
+  const variance = effRtts.reduce((s, v) => s + (v - mean) ** 2, 0) / effRtts.length;
   const avgMbps = raceMbps.length
     ? raceMbps.reduce((a, b) => a + b, 0) / raceMbps.length
     : null;
   return {
     avgRtt:    mean,
     avgJitter: Math.sqrt(variance),
-    bestRtt:   Math.min(...raceRtts),
-    worstRtt:  Math.max(...raceRtts),
+    bestRtt:   Math.min(...effRtts),
+    worstRtt:  Math.max(...effRtts),
     avgMbps,
   };
 }
