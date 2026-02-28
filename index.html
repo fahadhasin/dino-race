@@ -843,21 +843,26 @@ function computeStats() {
 function computeVelocity() {
   if (rttHistory.length === 0) return 0;
 
-  // Sigmoid with diminishing returns: each ms of improvement matters more at the low end,
-  // less so at the high end — correct for internet speed perception.
-  // Half-speed at 40ms RTT, calibrated for real CDN latency (10–80ms typical range).
-  // 10ms→36, 20ms→27, 40ms→20, 80ms→13 — meaningful spread, no hard ceiling.
+  // All three factors use sigmoid curves: each unit of improvement matters more at the low
+  // end and less at the high end (diminishing returns), with no hard ceiling.
+
+  // RTT half-speed at 40ms — calibrated for CDN latency to nearest Cloudflare PoP (10–80ms).
   const rttScore = 1 / (1 + avgRtt / 40);
 
-  // Half-speed at 12ms jitter. CDN jitter: ~2ms on stable WiFi, ~15-25ms on flaky mobile.
-  const stabilityScore = 1 / (1 + jitter / 12);
+  // Jitter half-speed at 20ms — CDN fetch has ~3-5ms inherent browser scheduling variance
+  // even on perfect connections, so threshold is set above that floor.
+  // Stable WiFi (~5ms jitter): 0.80. Moderate mobile (~20ms): 0.50. Flaky (~40ms): 0.33.
+  const stabilityScore = 1 / (1 + jitter / 20);
 
-  // Mbps: logarithmic boost — 10M→+15%, 100M→+29%, 1G→+43%
+  // Mbps: logarithmic boost — 10M→+15%, 100M→+29%, 1G→+43%.
+  // Logarithmic because marginal value of extra bandwidth diminishes rapidly past ~50Mbps.
   const mbpsScore = estimatedMbps != null
     ? 1 + Math.log10(estimatedMbps + 1) / 7
     : 1.0;
 
-  return 40 * rttScore * stabilityScore * mbpsScore;
+  // Multiplier 45: calibrated so good broadband (35ms RTT, 10ms jitter, 30Mbps) finishes
+  // comfortably, fibre finishes fast, flaky mobile clearly does not.
+  return 45 * rttScore * stabilityScore * mbpsScore;
 }
 
 function sendVelocity() {
