@@ -537,13 +537,10 @@ let players = {};
 
 // Ping / RTT tracking
 const RTT_WINDOW = 10;
-let rttHistory = [];   // last N round-trip times
-let avgRtt = 100;
+let rttHistory = [];   // last N round-trip times (measured via CDN fetch, not socket)
+let avgRtt = 0;
 let jitter = 0;
 let estimatedMbps = null;   // null until first measurement
-let pingSeq = 0;
-let baselineRtt    = 0;   // relay RTT overhead measured at race start; subtracted from in-race RTT
-let baselineJitter = 0;   // relay jitter overhead measured at race start; subtracted from in-race jitter
 
 // Race stats tracking
 let raceRtts  = [];
@@ -779,9 +776,6 @@ socket.on('race-start', ({ raceStart }) => {
   raceRtts = [...rttHistory];
   raceMbps = [];
   lastStutterTime = 0;
-  // Capture relay overhead so velocity is based on relative quality, not absolute tunnel latency
-  baselineRtt    = avgRtt;
-  baselineJitter = jitter;
   if (!animFrame) renderLoop();
 });
 
@@ -793,18 +787,31 @@ socket.on('positions', (posData) => {
 });
 
 // ─────────────────────────────────────────────
-// Ping loop
+// RTT + speed measurement
+// RTT is measured via a fetch() to a CDN endpoint — completely bypasses
+// the Tailscale relay so we measure the player's real internet latency,
+// not tunnel overhead. Speed test uses the same CDN for Mbps.
 // ─────────────────────────────────────────────
-function startPingLoop() {
-  setInterval(sendPing, 400);
-  // Speed test: fetch 200 KB every 5 seconds and compute download Mbps
-  measureSpeed();
-  setInterval(measureSpeed, 8000);
+const RTT_ENDPOINT = 'https://speed.cloudflare.com/cdn-cgi/trace';
+
+async function measureRtt() {
+  try {
+    const t0 = performance.now();
+    const res = await fetch(RTT_ENDPOINT, { cache: 'no-store' });
+    await res.text();
+    const rtt = performance.now() - t0;
+
+    rttHistory.push(rtt);
+    if (rttHistory.length > RTT_WINDOW) rttHistory.shift();
+    if (raceActive) raceRtts.push(rtt);
+    computeStats();
+  } catch (_) { /* network error — skip sample */ }
+  setTimeout(measureRtt, 1500);
 }
 
 async function measureSpeed() {
   try {
-    const bytes = 1_000_000; // 1 MB — enough for reliable measurement, not excessive
+    const bytes = 1_000_000;
     const t0  = performance.now();
     const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}&t=${t0}`, { cache: 'no-store' });
     const buf = await res.arrayBuffer();
@@ -815,21 +822,15 @@ async function measureSpeed() {
   } catch (_) { /* ignore */ }
 }
 
-function sendPing() {
-  socket.emit('ping', { clientTs: Date.now(), seq: ++pingSeq });
+function startPingLoop() {
+  measureRtt();                          // first RTT sample immediately
+  measureSpeed();                        // first Mbps sample immediately
+  setInterval(measureSpeed, 8000);       // Mbps every 8 s
+  setInterval(() => {                    // velocity + UI every 500 ms
+    sendVelocity();
+    updateStatsUI();
+  }, 500);
 }
-
-socket.on('pong', ({ clientTs, serverTs }) => {
-  const rtt = Date.now() - clientTs;
-  rttHistory.push(rtt);
-  if (rttHistory.length > RTT_WINDOW) rttHistory.shift();
-
-  if (raceActive) raceRtts.push(rtt);
-
-  computeStats();
-  sendVelocity();
-  updateStatsUI();
-});
 
 function computeStats() {
   if (rttHistory.length === 0) return;
@@ -840,25 +841,20 @@ function computeStats() {
 }
 
 function computeVelocity() {
-  if (avgRtt <= 0) return 0;
+  if (rttHistory.length === 0) return 0;
 
-  // Subtract relay/tunnel overhead measured at race start; keep at least 5ms so
-  // differences still matter between players on the same great connection.
-  const effectiveRtt = Math.max(5, avgRtt - baselineRtt * 0.9);
+  // RTT: measured directly to Cloudflare CDN — real internet latency, no tunnel noise.
+  // 50ms = half-speed baseline; good connections (10-30ms) run near full speed.
+  const rttScore = 1 / (1 + avgRtt / 50);
 
-  // RTT: 60ms = half-speed baseline (smooth curve, no cliff)
-  const rttScore = 1 / (1 + effectiveRtt / 60);
-
-  // Jitter / stability: subtract relay baseline, keep at least 0
-  const effectiveJitter = Math.max(0, jitter - baselineJitter * 0.9);
-  const stabilityScore = 1 / (1 + effectiveJitter / 100);
+  // Jitter: stability penalty. 30ms jitter = half speed.
+  const stabilityScore = 1 / (1 + jitter / 30);
 
   // Mbps: logarithmic boost — 10M→+15%, 100M→+29%, 1G→+43%
   const mbpsScore = estimatedMbps != null
     ? 1 + Math.log10(estimatedMbps + 1) / 7
     : 1.0;
 
-  // No hard cap — your connection quality is your speed
   return 40 * rttScore * stabilityScore * mbpsScore;
 }
 
@@ -870,8 +866,8 @@ function sendVelocity() {
     velocity: vel,
     raceStats: stats,
     liveStats: {
-      rtt:    Math.round(Math.max(5, avgRtt - baselineRtt * 0.9)),
-      jitter: Math.round(Math.max(0, jitter - baselineJitter * 0.9)),
+      rtt:    Math.round(avgRtt),
+      jitter: Math.round(jitter),
       mbps:   estimatedMbps != null ? Math.round(estimatedMbps * 10) / 10 : null,
     },
   });
@@ -879,20 +875,16 @@ function sendVelocity() {
 
 function buildRaceStats() {
   if (raceRtts.length === 0) return null;
-  // Apply the same baseline correction used in computeVelocity() so that
-  // results, canvas card, CSV, and share text all reflect effective values,
-  // not the raw relay/tunnel overhead.
-  const effRtts = raceRtts.map(r => Math.max(5, r - baselineRtt * 0.9));
-  const mean = effRtts.reduce((a, b) => a + b, 0) / effRtts.length;
-  const variance = effRtts.reduce((s, v) => s + (v - mean) ** 2, 0) / effRtts.length;
+  const mean = raceRtts.reduce((a, b) => a + b, 0) / raceRtts.length;
+  const variance = raceRtts.reduce((s, v) => s + (v - mean) ** 2, 0) / raceRtts.length;
   const avgMbps = raceMbps.length
     ? raceMbps.reduce((a, b) => a + b, 0) / raceMbps.length
     : null;
   return {
     avgRtt:    mean,
     avgJitter: Math.sqrt(variance),
-    bestRtt:   Math.min(...effRtts),
-    worstRtt:  Math.max(...effRtts),
+    bestRtt:   Math.min(...raceRtts),
+    worstRtt:  Math.max(...raceRtts),
     avgMbps,
   };
 }
@@ -1369,8 +1361,8 @@ function updateStatsUI() {
     const pos = serverPositions[id];
     const isMe = id === myId;
 
-    const rtt    = isMe ? Math.round(Math.max(5, avgRtt - baselineRtt * 0.9))    : (pos?.rtt    != null ? pos.rtt    : '—');
-    const jit    = isMe ? Math.round(Math.max(0, jitter - baselineJitter * 0.9)) : (pos?.jitter != null ? pos.jitter : '—');
+    const rtt    = isMe ? Math.round(avgRtt)  : (pos?.rtt    != null ? pos.rtt    : '—');
+    const jit    = isMe ? Math.round(jitter)  : (pos?.jitter != null ? pos.jitter : '—');
     const mbpsV  = isMe ? estimatedMbps       : (pos?.mbps   != null ? pos.mbps   : null);
     const rttStr = typeof rtt === 'number' ? rtt + 'ms' : rtt;
     const jitStr = typeof jit === 'number' ? jit + 'ms' : jit;

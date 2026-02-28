@@ -245,11 +245,6 @@ io.on('connection', (socket) => {
     broadcastLobby(room);
   });
 
-  // Ping/pong for RTT measurement
-  socket.on('ping', (data) => {
-    socket.emit('pong', { clientTs: data.clientTs, serverTs: Date.now() });
-  });
-
   // Client reports its computed velocity + live stats
   socket.on('velocity-update', ({ velocity, raceStats, liveStats }) => {
     if (!currentPlayer || !currentRoom || currentRoom.state !== 'racing') return;
