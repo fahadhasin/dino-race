@@ -1,0 +1,15 @@
+[Unit]
+Description=Dino Race multiplayer game server
+After=network.target
+
+[Service]
+Type=simple
+User=admin_pi5
+WorkingDirectory=/home/admin_pi5/dino-race
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+Environment=PORT=3456
+
+[Install]
+WantedBy=multi-user.target
