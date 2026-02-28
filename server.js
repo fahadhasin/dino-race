@@ -17,7 +17,7 @@ const MAX_PLAYERS = 6;
 const RACE_DURATION_MS = 60000;
 const FINISH_POSITION = 1000;
 const TICK_INTERVAL_MS = 50;
-const MAX_VELOCITY = 60;   // generous server-side cap — formula tops out ~50
+const MAX_VELOCITY = 80;   // sigmoid tops out ~55 in practice; 80 gives headroom without unbounded values
 
 // rooms: Map<roomId, RoomState>
 const rooms = new Map();

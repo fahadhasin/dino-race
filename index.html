@@ -843,12 +843,14 @@ function computeStats() {
 function computeVelocity() {
   if (rttHistory.length === 0) return 0;
 
-  // RTT: measured directly to Cloudflare CDN — real internet latency, no tunnel noise.
-  // 50ms = half-speed baseline; good connections (10-30ms) run near full speed.
-  const rttScore = 1 / (1 + avgRtt / 50);
+  // Sigmoid with diminishing returns: each ms of improvement matters more at the low end,
+  // less so at the high end — correct for internet speed perception.
+  // Half-speed at 40ms RTT, calibrated for real CDN latency (10–80ms typical range).
+  // 10ms→36, 20ms→27, 40ms→20, 80ms→13 — meaningful spread, no hard ceiling.
+  const rttScore = 1 / (1 + avgRtt / 40);
 
-  // Jitter: stability penalty. 30ms jitter = half speed.
-  const stabilityScore = 1 / (1 + jitter / 30);
+  // Half-speed at 12ms jitter. CDN jitter: ~2ms on stable WiFi, ~15-25ms on flaky mobile.
+  const stabilityScore = 1 / (1 + jitter / 12);
 
   // Mbps: logarithmic boost — 10M→+15%, 100M→+29%, 1G→+43%
   const mbpsScore = estimatedMbps != null
