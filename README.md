@@ -18,6 +18,14 @@ Every 1.5 seconds your browser measures three things against Cloudflare's neares
 
 All three use diminishing returns: halving your latency matters more if you're already fast.
 
+```
+velocity = 45 × rttScore × stabilityScore × mbpsScore
+
+rttScore       = 1 / (1 + avgRtt / 40)     — half-speed at 40 ms RTT
+stabilityScore = 1 / (1 + jitter / 20)      — half-speed at 20 ms jitter
+mbpsScore      = 1 + log10(Mbps + 1) / 7   — 10 Mbps→+15%, 100 Mbps→+29%, 1 Gbps→+43%
+```
+
 ---
 
 ## Running locally
