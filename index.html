@@ -278,6 +278,9 @@
     border-collapse: collapse;
     margin-bottom: 20px;
   }
+  @media (max-width: 600px) {
+    .col-hide-mobile { display: none; }
+  }
   .results-table th {
     color: #aaa;
     font-size: 0.78rem;
@@ -478,6 +481,7 @@
   <!-- Full detailed stats -->
   <details class="stats-details" open>
     <summary>📊 Full Results</summary>
+    <div style="overflow-x:auto">
     <table class="results-table" id="results-table">
       <thead>
         <tr>
@@ -485,13 +489,14 @@
           <th>Dino / Player</th>
           <th>Avg RTT</th>
           <th>Avg Jitter</th>
-          <th>Best RTT</th>
-          <th>Worst RTT</th>
+          <th class="col-hide-mobile">Best RTT</th>
+          <th class="col-hide-mobile">Worst RTT</th>
           <th>Avg Speed</th>
         </tr>
       </thead>
       <tbody id="results-body"></tbody>
     </table>
+    </div>
   </details>
 
   <div class="results-actions">
@@ -537,6 +542,7 @@ let avgRtt = 100;
 let jitter = 0;
 let estimatedMbps = null;   // null until first measurement
 let pingSeq = 0;
+let baselineRtt = 0;   // relay overhead measured at race start; subtracted from in-race RTT
 
 // Race stats tracking
 let raceRtts  = [];
@@ -772,6 +778,8 @@ socket.on('race-start', ({ raceStart }) => {
   raceRtts = [...rttHistory];
   raceMbps = [];
   lastStutterTime = 0;
+  // Capture relay overhead so velocity is based on relative quality, not absolute tunnel latency
+  baselineRtt = avgRtt;
   if (!animFrame) renderLoop();
 });
 
@@ -832,8 +840,12 @@ function computeStats() {
 function computeVelocity() {
   if (avgRtt <= 0) return 0;
 
+  // Subtract relay/tunnel overhead measured at race start; keep at least 5ms so
+  // differences still matter between players on the same great connection.
+  const effectiveRtt = Math.max(5, avgRtt - baselineRtt * 0.9);
+
   // RTT: 60ms = half-speed baseline (smooth curve, no cliff)
-  const rttScore = 1 / (1 + avgRtt / 60);
+  const rttScore = 1 / (1 + effectiveRtt / 60);
 
   // Jitter / stability: 100ms jitter = half speed
   const stabilityScore = 1 / (1 + jitter / 100);
@@ -1401,8 +1413,8 @@ socket.on('race-results', (results) => {
       </td>
       <td class="${rttClass}">${avgR}${typeof avgR === 'number' ? 'ms' : ''}</td>
       <td class="${jClass}">${avgJ}${typeof avgJ === 'number' ? 'ms' : ''}</td>
-      <td class="good-stat">${bestR}${typeof bestR === 'number' ? 'ms' : ''}</td>
-      <td class="bad-stat">${worstR}${typeof worstR === 'number' ? 'ms' : ''}</td>
+      <td class="good-stat col-hide-mobile">${bestR}${typeof bestR === 'number' ? 'ms' : ''}</td>
+      <td class="bad-stat col-hide-mobile">${worstR}${typeof worstR === 'number' ? 'ms' : ''}</td>
       <td class="stat-mbps" style="color:#2ecc71">${spd}</td>`;
     tbody.appendChild(tr);
   });
