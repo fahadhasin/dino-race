@@ -542,7 +542,8 @@ let avgRtt = 100;
 let jitter = 0;
 let estimatedMbps = null;   // null until first measurement
 let pingSeq = 0;
-let baselineRtt = 0;   // relay overhead measured at race start; subtracted from in-race RTT
+let baselineRtt    = 0;   // relay RTT overhead measured at race start; subtracted from in-race RTT
+let baselineJitter = 0;   // relay jitter overhead measured at race start; subtracted from in-race jitter
 
 // Race stats tracking
 let raceRtts  = [];
@@ -779,7 +780,8 @@ socket.on('race-start', ({ raceStart }) => {
   raceMbps = [];
   lastStutterTime = 0;
   // Capture relay overhead so velocity is based on relative quality, not absolute tunnel latency
-  baselineRtt = avgRtt;
+  baselineRtt    = avgRtt;
+  baselineJitter = jitter;
   if (!animFrame) renderLoop();
 });
 
@@ -847,8 +849,9 @@ function computeVelocity() {
   // RTT: 60ms = half-speed baseline (smooth curve, no cliff)
   const rttScore = 1 / (1 + effectiveRtt / 60);
 
-  // Jitter / stability: 100ms jitter = half speed
-  const stabilityScore = 1 / (1 + jitter / 100);
+  // Jitter / stability: subtract relay baseline, keep at least 0
+  const effectiveJitter = Math.max(0, jitter - baselineJitter * 0.9);
+  const stabilityScore = 1 / (1 + effectiveJitter / 100);
 
   // Mbps: logarithmic boost — 10M→+15%, 100M→+29%, 1G→+43%
   const mbpsScore = estimatedMbps != null
@@ -867,8 +870,8 @@ function sendVelocity() {
     velocity: vel,
     raceStats: stats,
     liveStats: {
-      rtt:    Math.round(avgRtt),
-      jitter: Math.round(jitter),
+      rtt:    Math.round(Math.max(5, avgRtt - baselineRtt * 0.9)),
+      jitter: Math.round(Math.max(0, jitter - baselineJitter * 0.9)),
       mbps:   estimatedMbps != null ? Math.round(estimatedMbps * 10) / 10 : null,
     },
   });
@@ -1362,8 +1365,8 @@ function updateStatsUI() {
     const pos = serverPositions[id];
     const isMe = id === myId;
 
-    const rtt    = isMe ? Math.round(avgRtt)  : (pos?.rtt    != null ? pos.rtt    : '—');
-    const jit    = isMe ? Math.round(jitter)  : (pos?.jitter != null ? pos.jitter : '—');
+    const rtt    = isMe ? Math.round(Math.max(5, avgRtt - baselineRtt * 0.9))    : (pos?.rtt    != null ? pos.rtt    : '—');
+    const jit    = isMe ? Math.round(Math.max(0, jitter - baselineJitter * 0.9)) : (pos?.jitter != null ? pos.jitter : '—');
     const mbpsV  = isMe ? estimatedMbps       : (pos?.mbps   != null ? pos.mbps   : null);
     const rttStr = typeof rtt === 'number' ? rtt + 'ms' : rtt;
     const jitStr = typeof jit === 'number' ? jit + 'ms' : jit;
